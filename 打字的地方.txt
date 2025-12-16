@@ -1,0 +1,2984 @@
+
+
+2024/09/20
+promise如果失败，并且没有一个处理失败函数，则它的报错会出现在控制台
+onunhandledrejection事件
+
+Promise/A+标准
+https://promisesaplus.com/#notes
+
+
+阅读这两篇文章：
+https://web.dev/articles/promises?hl=zh-cn
+
+
+https://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html
+中文：
+https://blog.csdn.net/jokerjiaojiao/article/details/103116241
+
+
+20:14 9/22谢然
+
+
+  p.then().then().then().then().then()
+注意这两种不一样
+  p.then()
+  p.then()
+  p.then()
+  p.then()
+  p.then()
+
+
+
+
+
+  p.then().then().then().then().then()
+  这两者是等价的
+  p = p.then(f)
+  p = p.then(f)
+  p = p.then(f)
+  p = p.then(f)
+  p = p.then(f)
+
+
+
+
+
+var p = new Promise(...)
+
+  for (let url of urls) {
+    p = p.then(() => url)
+  }
+等价于
+  urls.reduce(() => {
+    return p.then(() => url)
+  }, new Promise(...))
+
+
+
+factory function
+工厂函数：专门创建某个东西的函数
+document.createElement('span')
+
+
+promise构造时的executor函数是立即执行的，在构造函数内被已经被调用了，不会异步执行
+class Promise {
+  constructor(executor) {
+    try {
+      executor(resolve, reject)
+    } catch(e) {
+  }
+}
+
+作业：实现Promise.xxx上的所有函数
+all,race,allSettled,any,try,withResolvers
+
+
+20:45 9/23谢然
+
+
+
+
+// all,race,allSettled,any,try,withResolvers
+
+
+Promise.try = function(f) {
+  return new Promise((resolve, reject) => {
+    try {
+      var result = f()
+      resolve(result)
+    } catch(e) {
+      reject(e)
+    }
+  })
+}
+
+function any(promises) {
+  return new Promise((resolve, reject) => {
+    var errors = []
+    var len = promises.length
+    var count = 0
+
+    if (len == 0) {
+      reject(new AggregateError([]))
+    } else {
+      for (let i = 0; i < len; i++) {
+        let promise = promises[i]
+        Promise.resolve(promise).then(value => {
+          resolve(value)
+        }, reason => {
+          errors[i] = reason
+          count++
+          if (count == len) {
+            reject(  new AggregateError(errors)  )
+          }
+        })
+      }
+    }
+  })
+}
+
+function withResolvers() {
+  var resolve, reject
+  var promise = new Promise((re, rj) => {
+    resolve = re
+    reject = rj
+  })
+  return {
+    promise,
+    resolve,
+    reject
+  }
+}
+
+function allSettled(promises) {
+  var {promise, resolve} = Promise.withResolvers()
+  var result = []
+  var len = promises.length
+  var count = 0
+
+  if (len == 0) {
+    resolve(result)
+  } else {
+    for (let i = 0; i < len; i++) {
+      let promise = promises[i]
+      Promise.resolve(promise).then(value => {
+        result[i] = {
+          status: 'fulfilled',
+          value,
+        }
+        count++
+        if (count == len) {
+          resolve(result)
+        }
+      }, reason => {
+        result[i] = {
+          status: 'rejected',
+          reason,
+        }
+        count++
+        if (count == len) {
+          resolve(result)
+        }
+      })
+    }
+  }
+
+  return promise
+}
+
+function race(promises) {
+  return new Promise((resolve, reject) => {
+    for (var promise of promises) {
+      Promise.resolve(promise).then(resolve, reject)
+    }
+  })
+}
+
+function all(promises) {
+  return new Promise((resolve, reject) => {
+    var result = []
+    var len = promises.length
+    var count = 0 // 记录成功的promise的数量
+    if (promises.length == 0) {
+      resolve(result)
+    } else {
+      for (let i = 0; i < promises.length; i++) {
+        let promise = promises[i]
+        Promise.resolve(promise).then(val => {
+          result[i] = val
+          count++
+          if (count === len) {
+            resolve(result)
+          }
+        }, reason => {
+          reject(reason)
+        })
+      }
+    }
+  })
+}
+
+// 静态方法
+Promise.resolve = function resolve(val) {
+  return new Promise(resolve => {
+    resolve(val)
+  })
+}
+
+
+
+promise.finally(f)：
+promise无论成功与失败f都会执行
+finally只接一个参数
+f不接参数
+finally返回一个新的promise2
+如果f返回promise3，则promise2会等待promise，但不会取它的结果，而是取promise的结果
+即一个promise的结果会穿透它的finally调用到finally返回的promise对象上
+
+Promise.prototype.catch = function(f) {
+  return this.then(null, f)
+}
+
+Promise.prototype.finally = function(f) {
+  // return new Promise()
+  return this.then((value) => {
+    return Promise.resolve(f()).then(() => value)
+  }, (reason) => {
+    return Promise.resolve(f()).then(() => {throw reason})
+  }) // p3
+}
+
+
+
+
+polyfill：
+当前浏览器不自带，但新版本的浏览器或语言支持某函数/class
+自行实现一个跟未来版本自带的一样的函数/方法/class就称为polyfill
+典型的polyfill：
+  在IE6中实现Map，Set，Promise
+  在IE8中实现Array.prototype.map/filter/reduce或者 Array.of/from/isArray
+
+shim：
+垫片
+就是无法在旧旧版环境中完全模拟新版本环境的行为，但可以解决一定的问题，称shim
+示例：
+ 在旧浏览器中实现console.log
+  这并不能真正的实现这个功能，因为旧版浏览器都没有控制台，但是实现一个这样的函数可以让代码在调用console.log时不报错
+
+
+
+9/25谢然
+
+function get(url) {
+  return new Promise(resolve => {
+    var xhr = new XMLHttpRequest()
+    xhr.open('get', url)
+    xhr.onload = () => {
+      resolve(xhr.responseText)
+    }
+    xhr.send()
+  })
+}
+
+function delay(time) {
+  return new Promise(resolve => {
+    setTimeout(resolve, time)
+  })
+}
+
+function getValue(value, time) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(value)
+    }, time)
+  })
+}
+
+
+function co(generatorFunction) {
+  return new Promise((resolve, reject) => {
+    var generator = generatorFunction()
+    try {
+      var generated = generator.next()
+      step()
+    } catch(e) {
+      reject(e)
+    }
+
+    
+    function step() {
+      if (generated.done === false) {
+        Promise.resolve(generated.value).then(val => {
+          try {
+            generated = generator.next(val)
+            step()
+          } catch(e) {
+            reject(e)
+          }
+        }, reason => {
+          try {
+            generated = generator.throw(reason)
+            step()
+          } catch(e) {
+            reject(e)
+          }
+        })
+      } else {
+        resolve(generated.value)
+      }
+    }
+  })
+}
+
+function run(generatorFunction) {
+  return new Promise((resolve, reject) => {
+    var generator = generatorFunction()
+    var generated = generator.next()
+
+    step()
+    
+    function step() {
+      if (generated.done === false) {
+        Promise.resolve(generated.value).then(val => {
+          generated = generator.next(val)
+          step()
+        }, reason => {
+          generated = generator.throw(reason)
+          step()
+        })
+      } else {
+        resolve(generated.value)
+      }
+    }
+  })
+}
+
+
+function run(generatorFunction) {
+  return new Promise((resolve, reject) => {
+    var generator = generatorFunction()
+    var generated = generator.next()
+
+    step()
+    
+    function step() {
+      if (generated.done === false) {
+        Promise.resolve(generated.value).then(val => {
+          generated = generator.next(val)
+          step()
+        })
+      } else {
+        resolve(generated.value)
+      }
+    }
+  })
+}
+
+function run(generatorFunction) {
+  var generator = generatorFunction()
+  var generated = generator.next()
+
+  step()
+  
+  function step() {
+    if (generated.done === false) {
+      Promise.resolve(generated.value).then(val => {
+        generated = generator.next(val)
+        step()
+      })
+    }
+  }
+}
+
+
+
+async function * baz() {
+  await delay(1000)
+  yield 2
+  await delay(1000)
+  yield 3
+  await delay(1000)
+  yield 4
+}
+var gen = baz()
+// 异步生成器函数的next总是返回promise，返回的promise将会resolve出{value,done}这样的对象
+// 因为异步生成器并不一定能立马运行到下一条yield语句，
+// 因为可能在遇到下一条yield语句之前遇到await语句，那么就必须等这个await恢复
+// for await (var x of asyncGeneratorFunction() ) {}
+// for await 语句可以用遍历/迭代异步生成器生成的值，这个语句自然也会运行与异步生成器函数一样久的时间
+// 同时它只能出现在async函数里
+
+
+作业：
+
+1 阅读这篇文章：
+https://bluepnume.medium.com/even-with-async-await-you-probably-still-need-promises-9b259854c161
+
+2 使用异步函数实现图片一张一张下载的那个作业。
+
+
+
+
+
+
+
+
+20:23 9/26谢然
+
+regenerator runtime
+
+
+
+
+
+
+20:13 9/27谢然
+
+语义化版本号 sematic version
+修复bug，提升性能，但不改变也不新增现有接口，只更新最后一位版本
+新增功能，更新第二位版本号
+破坏现有功能，更新主版本号
+
+
+
+
+es module 语法：
+export 关键字：具名导出，导出的东西必须有名字
+在任何可以导出的东西前面加export不改变这条语句原本的任何含义
+
+export default 默认导出：导出一个值，其后跟表达式
+
+每个模块文件自身就有一个作用域
+其内通过var/let/const创建的变量处于模块作用域内
+
+当要导出一个已经存在的变量为具名导出时：
+export { jQuery }
+
+通过import语法创建的变量相当于const创建的，所以不赋值，不重复创建或导入相同名字的东西
+
+导入具名导出
+import {chunk, compact} from './lodash.js'
+导入默认导出
+import confetti from './confetti.js'
+import lodash from './lodash.js'
+
+导入某个模块的全部导出：
+import * as XXX from './xxx.js'
+这种语法下，XXX是一个“模块对象”
+XXX.named 为相应具名导出
+XXX.default 为它的默认导出
+
+
+import和export语句只能出现在模块文件的最顶层，即不能出现在代码块（{}）里面，如if，for，while，函数等里面
+
+模块的路径那里虽然是个字符串，但只能是静态字符串，不能有运算
+
+动态导入：
+import还可以做为一个函数，接收一个模块路径，动态导入相应的模块
+动态导入由于是一个普通的函数调用，所以它可以放在代码的任何位置，如if，for，或函数里
+var lodashMod  = await import('https://esm.sh/lodash')
+上面的语法得到的对象跟下面语法得到的lodashMod对象是相同的
+import * as lodashMod from 'https://esm.sh/lodash'
+
+
+
+
+
+21:17 9/28谢然
+
+eval能直接读到调用它的位置周围的变量，只要给定的代码中使用到了周围的变量，它就能读到，所以eval不受“词法作用域”的限制
+普通函数是不能直接读到调用位置周围的变量的。（把调用位置周围的变量传给函数不算）函数只能直接读到定义位置周围的变量
+
+eval直接使用会在使用的位置运行给定的代码
+但如果把eval赋给任何其它变量后，通过这个变量调用它，则它会在全局作用域执行给定的代码
+即将eval赋给其它变量后，它丢失了打破词法作用域限制的能力。
+
+
+
+
+setTimeout(  'console.log(1)',    2000)
+
+
+
+20:16 9/29谢然
+
+
+目前的同步require不能接受，有两个原因：
+一个原因是所有的模块都是串行加载的，需要的时间太久
+二是加载过程中（由于是同步加载）页面还是无响应（阻塞）的
+
+
+作业：将loadFileAndAllDeps再使用promise风格和async await风格实现一遍，并观察加载时的瀑布图，与回调风格的做对比
+
+
+使用先异步加载所有依赖再从入口开始执行的办法依然存在性能问题：
+最长依赖链决定了整个加载所需的时间
+（并且使用es module同样存在这个问题）
+
+
+所以我们现在不会直接在浏览器中使用未经打包的模块加载方式，那样太耗时了
+而是会通过类似webpack等工具把所有的代码打包到单个文件中（也可以配置成打包到多个文件中）
+事实上，es module也会这么处理，并且es module自身由于不能打包，所以会被webpack先转成common js的模块书写方式再进行打包
+
+
+关于循环依赖：
+  模块不能替换module.exports
+  模块不能同步使用导入模块的提供的方法等，因为同步拿到的可能是空的导出对象，等模块都加载完后这个对象才有内容
+
+
+
+
+
+20:42 9/30谢然
+
+试试email的“查看原文”功能。一般会打开一个页面，里面只有纯文本，但是也有一些格式和标记
+
+
+
+
+作业：https://todomvc.com/
+实现 todo list
+必须要实现刷新还在的功能。
+
+
+21:47 10/3谢然
+
+以数据为中心实现的todo list虽然解决了数据与ui的一致性问题
+但是它还是可以进一步优化的：
+1 我们必须手动调用renderPage()
+  目标：数据变了自动调用
+2 由于使用的是事件代理，所以很多不同元素的操作都放在同一个函数的不同片段
+  而且还是根据类名或某种选择定位到相应元素
+  目标：每个按钮或元素的操作单独放在一个函数里
+  目标：直接把函数放到元素上而不是在事件代理函数里判断事件来源于哪个元素
+3 模板语法（js模板字符串，要是以前只能是字符串拼接，那更难受）不够友好
+  目标：更友好的模板写法
+4 模板结构并不是就地出现在页面里的
+  目标：如果能够直接出现在页面里可能更方便
+5 不管数据有多少微小的变化，我们都是全量更新app元素中的innerHTML的
+  当页面太大时，必然会导致性能浪费，最终卡顿
+  当给innerHTML赋值时，浏览器是会解析给写的html字符串为dom的，这个是有隐含耗时的
+  目标：只更新需要更新的部分，而不是全量更新innerHTML
+  （但是现在是字符串，想通过innerHTML的方式只更新需要更新的部分不太好做）
+  （这些字符串其实表示的是html结构，也即树状结构）（所以我们想要的可能是对两个颗树比较差异）
+
+
+Vue.js框架实现了以上所有目标！
+
+
+vue模板语法：
+  {{expr}}可以在标签之间插值
+  :attr="expr"属性插值
+  v-for="(item,idx) of/in array"
+  @eventname="func()" 绑定事件
+  v-if="expr" 元素的存在（于dom中）与否
+  v-show="expr" 元素的显隐（display:none)
+  v-model="expr" 双向绑定：变量的值会影响到元素的状态，用户与元素的交互状态又会回到变量上
+
+20:36 10/4谢然
+
+声名式的对立面叫“命令式”
+
+
+通过innerHTML给dom插入的script/style标签在现代浏览器中是不会执行的，因为它有安全隐患
+
+所有v-开头的属性的属性值都是表达式，除v-for以外。
+
+
+
+<span v-bind="obj"></span>：
+obj的所有property将成为span的所有attribute
+
+
+
+vue3使用proxy来实现响应式的原因：
+proxy比getter/setter更强大，可以提供对对象的全方位监控；而g、setter只能监控已经存在的属性的读写。
+
+proxy性能更好：g/setter需要一开始就把所有的（包括深层次）属性都改成g、setter，而proxy不需要，只需要在一开始对最外层对象做一次proxy包裹
+
+
+
+各种异步调用函数的方法：
+setTimeout(f)
+requestAnimationFrame(f)
+promise.then(f)
+setImmediate(f)
+process.nextTick(f)
+queueMicrotask(f)
+
+
+
+
+
+
+
+
+20:32 10/5谢然
+
+
+简单的依赖收集原理：
+var obj = {
+  get a() {
+    deps.push('a')
+    return 1
+  },
+  get b() {
+    deps.push('b')
+    return 2
+  },
+  get c() {
+    deps.push('c')
+    return 3
+  }
+}
+
+var deps = []
+
+function f() {
+  return obj.a + obj.c
+}
+function g() {
+  return obj.a + obj.b
+}
+
+deps = []
+f()
+console.log(deps)
+
+deps = []
+g()
+console.log(deps)
+
+
+
+
+
+
+
+vue2中v-if 与v-for用在同一个元素是，for优先级更高
+vue3是反过来的
+
+
+vue2中对数组下标直接赋值是不会被响应式系统感知到的，所以不会因此更新dom。因为vue2没有把数组的每个下标改成getter/setter，所以监控不到
+但vue3中同样的行为会被感知到，因为3中用的是proxy，可以监控数组下标的赋值
+面试常问；
+
+
+
+
+
+
+
+22:00 10/7谢然
+
+但凡考虑到“封装”，都有两个角度：
+一是使用者/消费者角度
+二是实现者/生产者角度
+在学习阶段，学习者通常同时处于两个视角。
+有时会混淆二者。
+
+
+
+组件的属性英文一般叫props
+区别于attributes和property
+html标签的属性叫attribute
+标签的dom对象的属性叫property
+
+
+
+
+作业：
+用vue组件化实现轮播图
+要求要有指示器，要有ui，加分：要有动画
+接参：slides, autoplay
+autoplay参数表示是否会自动播放，如果不传则不自动播放
+传了则传一个数，按这个数（毫秒）为时间间隔自动播放
+
+
+
+
+
+20:04 10/8谢然
+
+
+谁的模板用谁的数据。
+
+
+
+mounted与beforeUnmount其实就对应于组件的资源分配与释放
+类似于程序在启动后建立网络连接，在关闭前（或使用完连接后）关闭网络连接
+在一个class构造时分配存储空间，在这个class需要被销毁时，释放之前分配的存储空间
+c++语言里有“构造函数”和“析构函数”
+构造函数：分配空间，给空间内的值填入初始值，动态分配空间
+
+
+
+对比两个vnode结点的大致算法：
+从根结点开始对比。
+如果结点的标签名相同，则修改旧的标签的属性到新的标签属性（如果属性以及事件也都相同，则啥也不用改）
+  然后递归（可能是按顺序）对比它们的子元素
+如果结点的标签名称不同，则删掉旧的标签及其内容，在同样的位置构建新的标签结构。也无须递归对比后代了。
+遇到组件时：
+
+
+
+作业：实现tabs组件
+data() {
+  return {
+    items: [{
+    key: '1',
+    label: 'Tab 1',
+    children: 'Content of Tab Pane 1',
+  },
+  {
+    key: '2',
+    label: 'Tab 2',
+    children: 'Content of Tab Pane 2',
+  },
+  {
+    key: '3',
+    label: 'Tab 3',
+    children: 'Content of Tab Pane 3',
+  },]
+  }
+}
+模板里：
+<tabs default-active-key="1" :items="items"/>
+
+
+
+
+21:07 10/9谢然
+
+
+作业：为轮播图和tabs组件加上合适的事件以让使用者能够知道组件内发生了什么。
+
+
+作业：实现个key/value编辑器组件
+
+_______:______ -
+_______:______ -
+_______:______ -
++
+
+<map-input v-model="someMap"></map-input>
+
+作业2： 实现一个日期选择器，要求其双向绑定的值的类型是Date
+
+<date-input v-model="birthday" ></date-input>
+
+birthday: new Date()
+
+
+
+
+
+22:55 10/11谢然
+
+作业：
+仅使用setup实现一个todo list应用
+使用setup的方式实现前面作业中的几个组件：轮播图和tabs，日期选择器
+
+
+
+
+
+
+21:09 10/12谢然
+
+
+正常情况下是通过模板编译出render函数
+
+setup也可以直接返回一个render函数
+
+render函数都是用来返回一个vnode结点的函数
+
+
+
+
+
+
+20:21 10/13谢然
+
+
+
+能够感知自己在哪个函数里调用的示例代码（注意是在哪个函数里，不是哪个组件实例里）
+原理就是onMounted感知到的是自己在最后一个被run调用的函数里面
+
+function onMounted() {
+  console.log('我正在被谁调用：', currentFunction.name)
+}
+
+function foo() {
+  onMounted()
+}
+
+function bar() {
+  onMounted()
+  run(foo)
+}
+function baz() {
+  // run(baa)
+  baa()
+}
+function baa() {
+  onMounted()
+}
+
+var currentFunction = null
+
+function run(f, ...args) {
+  var previousCurrentFunction = currentFunction
+  currentFunction = f
+  try {
+    var result = f(...args)
+    return result
+  } finally {
+    currentFunction = previousCurrentFunction
+  }
+}
+
+
+
+
+异步组件处于加载中状态时，suspense组件会显示其fallback
+加载完成会显示实际组件
+当异步加载中组件被suspense包裹时，从suspense外面看，这个suspense组件不牌加载中状态，从外面看它就是一个普通的组件。
+
+
+
+
+
+
+极简的监控数据并更新页面并批量更新的原理代码：
+
+
+var scheduledUpdate = false
+
+function reactive(obj) {
+  return new Proxy(obj, {
+    get(target, key) {
+      return target[key]
+    },
+    set(target, key, val) {
+      target[key] = val
+      if (scheduledUpdate == false) {
+        scheduledUpdate = true
+        Promise.resolve().then(() => {
+          update()
+        })
+      }
+    }
+  })
+}
+
+function update() {
+  console.log('更新页面')
+  scheduledUpdate = false
+}
+
+
+
+vue2与vue3的另一个重要区别是
+1 模板编译器的编译方式不同
+vue3编译结果有相当大的性能优化：具体体现在模板中静态的内容在render函数中不会每次创建，而是创建一次后续都一直使用
+
+2 vue3中可能没有再使用虚拟dom对比来更新页面中需要更新的部分
+  而是根据模板推导出哪个数据变了应该去更改dom中的哪个部分
+  它可以分析出数据与dom中的哪个部分有关联，可以精确到文本结点以及dom结点的属性，当数据发生变化时它直接就去更新dom中对应的位置，没有vnode生成，也没有vnode的差异对比，性能飙升
+
+3 vue中能让dom结构发生变化的只有v-if/else和v-for，没有使用v-if/v-for的部分，dom结构肯定不发生变化，只会是文字内容或属性发生变化
+ 
+4 编译出来render函数返回的结果中包含编译器对模板的理解，以更好更快的实现dom的更新
+
+
+
+作业：用拆分组件的方式实现todo list
+
+20:38 10/14谢然
+
+
+相邻组件上层通过给下层传props来实现向下层传递信息，
+下层组件通过事件向上层组件传递信息，事件对象中就包含了具体的信息
+
+如果组件不是相邻层次的，则通过provide给下层组件传递信息
+上层组件并不能直接侦听下层组件的事件，但上层组件可以为下层provide一个函数，下层在合适的时机调用这个函数并传入参数，即可把信息从下层以传到上层。
+
+
+
+
+
+一般来说，组件是封闭的个体，只应该接收数据并消费数据，但不应该修改数据。但是当应用变的复杂，复杂到它需要拆分成多个、多层的组件时，此时上下层组件都服务于整个应用的业务逻辑，这个时候，上下层组件就会共用数据了，可能都会用到数据，也可能都会修改相应的数据。
+
+
+
+
+组件的props只在开发阶段会判断类型，在应用上线后是不会判断的，以节省时间。
+不判断会不会出错呢？如果开发阶段都ok，那么上线后应该也是ok的。
+
+
+开发环境：
+测试环境：
+预发布环境：
+生产环境：
+
+
+
+
+vue.esm-browser.js
+vue.runtime.esm-browser.js
+runtime版本是仅包含运行时版本，不包含编译器
+与运行时对应的叫编译时即上面一个版本，它也包含（模板）编译器
+
+
+
+HMR：模块热更新：
+可以做到在特定情况下，修改了代码后，页面不刷新就可以看到新的效果
+
+
+
+
+作业：
+根据这里的教程在自己的电脑上创建vue项目
+https://cn.vuejs.org/guide/quick-start.html
+
+windows特别注意：
+winpty  npm.cmd  create vue@latest
+
+cd 项目文件夹名称
+npm install 
+npm run dev 
+
+
+
+
+20:31 10/15谢然
+
+
+
+mapState的极简实现：https://pinia.vuejs.org/zh/core-concepts/getters.html
+
+mapState(useCounterStore, {
+  myOwnName: 'doubleCount',
+  // 你也可以写一个函数来获得对 store 的访问权
+  double: (store) => store.doubleCount,
+})
+
+
+function mapState(useStore, obj) {
+  var store = useStore()
+
+  var ret = {}
+
+  for (let key in obj) {
+    let val = obj[key]
+    if (typeof val == 'string') {
+      ret[key] = () => {
+        return store[val]
+      }
+    } else if (typeof val == 'function') {
+      ret[key] = () => {
+        return val(store)
+      }
+    }
+  }
+
+  return ret
+}
+
+
+作业：https://cn.vuejs.org/guide/essentials/application.html
+用组合式api风格再读一遍文档中的教程
+
+作业：阅读Vue英文文档。
+
+
+
+作业：创建项目在项目中用pinia实现拆分组件的todo list
+
+
+
+
+
+22:00 10/17谢然
+
+vite的工作原理：
+将我们写的代码转换到能够被浏览器直接执行和加载的es module的程度。开发阶段不打包
+
+
+作业：使用vue-router画一个类似微信的界面切换出来
+
+
+
+22:10 10/18谢然
+
+
+不同的历史记录模式的区别：
+优选web hash history mode：
+所有浏览器都支持
+无论#号后面是什么，刷新时都只请求#号前面的地址，所以有缓存
+无需后端额外做配置
+
+web history mode:
+支持history.pushState的浏览器支持，不支持时会自动退化到web hash history
+好处是地址栏好看，但这个好处卵用没用，用户会去看地址栏吗？99%不会，会又如何？
+坏处是没缓存：假设入口地址是http://localhost:5000/
+在页面内交互了一段时间后，地址变成了http://localhost:5000/foo/bar
+此时刷新页面，请求的是这个地址，而不是之前的入口地址
+
+需要后端服务器做额外的配置才可以：
+即以入口地址开头的任意地址都要返回与入口地址相同的内容（注意不是跳转到入口地址）。
+
+http://localhost:5000/
+http://localhost:5000/woief/woeijrw/woeir
+http://localhost:5000/#/woief/woeijrw/woeir
+
+乱打一个地址对于一个常规网站来说会怎样？
+会404
+但现在我们希望它返回与入口地址一样的内容
+所以要对服务器进行特殊的配置
+
+
+
+
+
+20:04 10/19谢然
+
+
+
+js中值有类型，但变量没有类型
+所以变量可以在任何时候指向任何一个类型的值
+这样的语言叫动态类型。
+类似js，python都是动态类型的语言
+
+
+还有不少的语言是静态类型，即变量也有类型，一旦确定了变量的类型，这个变量就只能指向这个类型的值了。
+这种叫静态类型。
+类似c，c++，java都是静态类型的语言
+
+
+语言的另一种分类方式：强类型与弱类型
+强类型：不支持自动类型转换，python，java
+弱类型：支持自动类型转换，c，js，
+
+
+
+
+静态类型能够（让工具，如编辑器、编译器）更早的帮你发现低级错误。在对代码进行静态分析的时候就能发现一些错误。
+静态分析：即不运行代码，只对代码的源代码进行分析。
+
+
+js语言并不会在代码运行之前检查代码的类型使用，只会检查语法错误。即只要代码的语法没有错误（只要每一行代码能以某种方式运行成功），代码就会开始运行。
+
+
+一般来说，做为库的提供者，我们需要写类型声明
+但做为库的使用者，我们不太会在自己的代码中写太多不必要的类型声明
+
+
+在静态类型的语言里，一个数组中的所有元素必须有着相同的类型。
+也就是数组也是有类型的：由特定类型的值组成的数组。
+
+
+
+Contextual typing for function这个特性必须要求函数就地书写在相应的位置（一般来说是参数的位置）
+
+
+ts常见面试题：
+type跟interface有什么区别
+type是运算
+interface是声明
+
+type可以声明联合类型
+interface不能
+
+interface不能给原始类型起别名
+
+interfacr名字总会出现在报错里，而type alias不一定
+
+类型别名不能参与声名合并，而interface可以
+
+interface只能声明对象类型，typealias也可以声明原始类型的别名
+
+
+interfaces extends 对编译器更加的性能友好
+
+
+
+
+// 这句话不是在做类型转换，ts从来不会给值做类型转换，只是在告诉ts这个值的类型，让ts更好的提示我们
+const myCanvas1 = document.getElementById("main_canvas") as HTMLCanvasElement
+
+// 同样的写法在c语言里是类型转换
+const myCanvas2 = <HTMLCanvasElement>document.getElementById("main_canvas")
+
+// 这句话在c语言里就是把getInt函数的返回值转换为float类型
+float x = <float>getInt()
+
+
+TypeScript only allows type assertions which convert to a more specific or less specific version of a type.
+
+
+类型其实是值的集合：
+boolean是由true和false组合的集合
+c语言的int是由-2147483648到2147483647之间所有的数组成的集合
+string是由任何字符串组成的“无限集合”
+
+
+作业：阅读ts文档英文版：
+https://www.typescriptlang.org/docs/handbook/2/everyday-types.html
+
+
+21:27 10/20谢然
+
+
+Narrowing： 类型收窄，类型窄化
+
+
+freshness        21:9 10/20谢然
+
+never类型的用法  21:25 10/20谢然
+
+
+
+函数有返回值的类型
+
+但函数自身也有类型：函数的类型标注了 函数的参数类型与返回值类型
+
+因为js支持高阶函数，所以有时我们会有一系列函数，以相同的方式接参，并返回相同类型的值
+
+
+
+it’s not legal to do anything with an unknown value
+https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown
+
+
+
+21:09 10/21谢然
+
+
+function，interface，type以及class都支持泛型
+
+
+作业：假装用ts实现一个MyPromise类，标注相关函数及参数以及返回值的类型；
+不需要实现代码中的逻辑，只需要把类型标注出来即可
+
+
+
+
+
+20:56 10/22谢然
+
+
+// infer的意思是，如果传入T类型能让inferU位置填入某种类型后让条件判断成立
+// 那么请把应该填入inferU位置的类型赋值给U类型，然后该类型可以问号右边使用
+type Flatten2<T> = T extends Array<infer U> ? U : T;
+
+
+
+
+
+21:37 10/22谢然
+
+// 对于函数的A extends B来说
+// 满足A类型约束的函数一定可以以B类型的约束来调用，这种时候extends才成立
+// 对于参数来说，A的参数类型可以比B的参数类型丰富，对于返回值来说，B的返回值类型可以比A的返回值类型丰富
+
+type GetReturnType<Type> = Type extends (a:number,b:string) => boolean | number
+  ? number
+  : never;
+
+type X6 = GetReturnType<(a:number | symbol,b:string) => boolean>
+
+
+
+https://github.com/type-challenges/type-challenges
+
+
+
+20:24 10/23谢然
+
+
+Promise类型声明作业解答：
+
+
+type PromiseResolver<T> = (value: T) => void
+
+type PromiseRejector = (reason: any) => void
+
+type PromiseExecutor<T> = (resolve: PromiseResolver<T>, reject: PromiseRejector) => void
+
+
+
+// T是MyPromise内包着的东西的类型
+class MyPromise<T> {
+  constructor(executor: PromiseExecutor<T>) {
+    const resolve: PromiseResolver<T> = (value) => {
+
+    }
+    /* function resolve(value: T): void {
+
+    } */
+    function reject(reason: any): void {
+
+    }
+    // const reject: PromiseRejector = (reason) => {
+
+    // }
+    executor(resolve, reject)
+  }
+  then<U, V>(onResolved: (value: T) => U, onRejected: (reason: any) => V): MyPromise<U | V> {
+    return new MyPromise((resolve, reject) => {
+
+    })
+  }
+}
+
+var p = new MyPromise<number>((resolve, reject) => {
+  resolve(2)
+})
+
+var q = p.then(v => {
+  return 'woeij'
+}, e => {
+  return true
+})
+
+
+
+
+
+
+
+
+
+作业：用React的class组件实现一个轮播图组件
+
+
+
+
+
+21:45 10/24谢然
+
+
+jsx的标签之间的插值如果是boolean,null,undefined，'',则会当成空，不显示任何内容
+
+react中双击事件是onDoubleClick不是ondblclick
+
+阅读react官方英文（建议英文版）
+https://react.dev/learn
+
+作业：用React的class组件实现TodoApp
+
+
+
+
+
+
+
+
+
+
+20:29 10/25谢然======================================
+
+sourcemap是什么，运行的是编译后/压缩后等的代码，调试的时候还是调试的源代码是怎么回事？
+编译结果代码的最后一行 //# sourceMappingURL=xxxxxx.js.map 是什么意思？
+它里面记录了什么信息？
+  记录了源代码的文件名及文件内容。所以这个文件在上线后一定一定是不能泄露的，别一起把这个文件也上线了
+
+
+
+
+
+class组件的setState是同步的还是异步的？什么时候同步什么时候异步？
+在16版本的时候，有时同步有时异步
+  同步时会立即合并state并且立即更新dom
+  什么时候同步？当setState所在调用栈中没有一系列的react函数时。在ajax回调/或异步函数的回中调用时是同步。在事件中调用是异步的。
+
+
+在最新的18版本中，始终是异步的。
+  通过queueMicrotask/postMessage触发的（事件中，直接由我们调用）
+  
+17版本我不记得了/不知道。因为17版本被react官方当做一个过渡版本，所以很多公司根本不用的
+
+setState做了什么？
+
+
+react生命周期示意图
+https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/
+
+
+
+20:39 10/26谢然=======================
+
+jsx和vue3都会忽略html代码行首行尾的空白
+vue2不会
+
+
+
+
+
+
+react的useXxxx函数在同一个组件实例内，不能改变调用顺序
+在同一个组件的多次渲染中，也不能改变调用次数
+
+
+react面试必问题目：为什么hook不能改变调用顺序
+
+
+
+错误的归因：
+为什么react hooks不能改变调用顺序？
+因为使用了链表嘛，当然不能换顺序，因为链表只能顺序访问
+正确的原因：并不是因为链表，而是因为api的形式，useState函数只能隐含的知道自己的调用顺序，所以只能返回对应顺序的状态，而与该状态的用处（名字）无关。
+
+
+
+作业：用函数组件实现轮播图
+
+20:04 10/27谢然============================
+
+传统中（包括各种语言中）我们写函数一般只关心函数的参数和返回值（有时还会关心抛出）
+不会关心函数在哪调用
+更不会限制函数只能在哪调用
+同一个函数的多次调用之间，往往是没有关系的
+（除非少数情况下这个函数会使用并/或改变全局变量）
+
+react的hooks函数：
+只能在函数组件内调用
+由于hook函数只能通过感知自己隐含的调用顺序来返回组件不同的状态
+同一个函数在一个组件内的多次调用，会返回不同的值
+
+
+
+在react18中，函数组件的setState也是异步的
+
+
+js的label语法，（标识符后面跟一个冒号）:可以理解为对某一行代码标记位置（或者说起名字）
+有的语言有一个goto语句，可以直接让代码跳转到某个label对应的行去执行
+
+js中的唯一用法：在内层循环break外层循环
+function foo() {
+  a:
+  for(;;) {
+    b:
+    for(;;) {
+      break a;
+    }
+  }
+}
+
+
+
+
+20:05 10/28谢然===============================
+
+函数组件并没有生命周期。不过它有类似的功能
+
+
+c/c++语言里：
+int a = 8
+f(   a    )  // 传值
+f(   &a   )  // 传引用,传地址
+
+
+面试如果问到ref你除了要答出它用来指向元素以外
+现在也用来模拟其它语言传引用的所有场景
+或者说所有需要不同位置的代码共享数据时的场景
+（一个地方改了，另一个地方能读到这个改动甚至能感应到（响应式））
+
+
+react中：
+字符串ref的用法现在不推荐了！
+ （为什么？因为react代码内部在实现这种用法时太过复杂，远比对象ref和函数ref要复杂的多的多）
+并且函数组件不支持字符串ref。只支持函数ref和对象ref。
+对象ref：创建一个ref对象传给jsx的ref属性，jsx实例化后会被该ref的current指向
+函数ref：创建一个函数并传给jsx的ref属性，jsx实例化为元素或组件后该函数会被调用并传入元素或组件做为其唯一参数（函数ref的另一个问题是名字不好起，要为函数自身起个名字，又要为元素挂在哪个字段上想一个名字，而且这两个名字不能一样）
+
+class组件可以接ref，最终该ref指向class组件的class实例
+函数组件不能接ref，因为函数组件没有实例（react会为函数组件创建所谓的FiberNode，但它是react内部实现我们拿了也没什么用）
+同时函数组件内部不能使用字符串ref指向其它元素或组件
+
+
+
+
+
+
+class组件除了state上可以放数据以外
+this上也可以随意放数据（但注意不要覆盖别的属性）
+而且直接挂在this上的属性修改时自然不会触发组件的更新（因为没有通过setState修改，再说了，setState也只能修改this.state属性）
+
+
+函数组件有没有什么地方能放数据并且在修改的时候不触发组件的更新？
+全局变量（外部变量）：可以，但意味着这个组件的所有实例会共享这些数据。
+ref，一个组件实例的某一个名字的ref会在这个组件的生命周期内始终指向同一个ref对象
+
+
+
+作业：完成轮播图组件将hover由state挪到ref上并保持组件功能不变。
+（因为hover的改变并不造成组件的ui更新，只造成组件内部的定时器状态发生变化，所以hover不需要放到state上，这样一来hover变化不会造成组件的ui更新）
+
+
+
+
+
+20:02 10/30谢然=============
+函数组件一个ref，就像class组件this上的一个字段一样
+ref之于函数组件就是this之于class组件
+
+
+
+
+
+
+react的hook函数为什么不能更换顺序或者放到if里？
+因为hook函数是通过隐含的调用顺序来区分不同的hook调用的
+函数组件的多次运行中，同一调用顺位的hook函数是对应的，会对应相同的状态或对比各自的依赖
+
+vue中的hooks函数可以换顺序调用或者放到if里吗？
+
+vue根本就不存在这个问题！
+因为vue的setup函数在一个组件实例上，只运行一次！
+
+
+
+
+var f = useCallback(function XXX(){},   [deps])
+等价于
+var f = useMemo(() => function XXX(){},   [deps])
+
+function useCallback(f, deps) {
+	return useMemo(() => f, deps)
+}
+
+
+
+
+
+postMessage,setTimeout触发的回调在重绘之后调用
+
+而已经成功的promise触发的回调在重绘之前调用，queueMicrotask也一样
+
+
+
+expose： 10-11 22：53
+
+
+
+https://19.react.dev/reference/react/forwardRef
+
+In React 19, forwardRef is no longer necessary. Pass ref as a prop instead.
+
+
+
+
+20:05 10/31谢然================================
+
+react里的Context是react中用来解决数据的跨组件层级传递的机制。
+生产者，一种用法：
+<XxxxContext.Provider value={xxx}>
+
+消费者，三种用法：
+var value = useContext(XxxContext) // 注意没有.Consumer
+
+<XxxxxContext.Consumer>
+  {
+    value => {return  jsx}
+  }
+</XxxxxContext.Consumer>
+
+class组件中为class声明static contextType = XxxxContext
+然后直接读取this.context即可
+
+
+作业：实现
+var forceUpdate = useForceUpdate()//调用forceUpdate就可以让组件强制更新了
+useInterval
+useToggle
+useDebounce
+useSet
+useCounter
+
+
+
+
+20:26 11/1谢然===============
+
+任何时候写自定义hooks的时候
+尽量返回的固定的函数，而不是每次运行时返回新的函数
+
+
+
+
+
+基于旧的数据创建新的数据
+旧数据中没变的部分，直接被新数据引用（即结构共享）
+旧数据中变化的部分，创建新的数据
+这种做法称做不可变数据：
+即数据一旦创建出来，就不再修改了。
+如果在整个应用中始终遵循这个些原则，
+则react组件就可以根据接收到的“新的”props/state是否是新对象（其实就是用===判断）
+而决定是否更新
+但是原生js的语言下创建结构共享的不可变数据代码相当啰嗦
+
+
+
+不可变数据在软件开发其它方面的影子：
+git的提交，是不可变的
+网站的url：很多网站的资源，一旦确定了url，此后这个url将始终指向这个资源的这个版本，不会变了
+资源内容变了，会给个新的url
+
+
+
+
+
+当你给immer.produce传入一个“变更函数”做为其首参时，其会返回一个函数用于接收想要执行那种变更的对象，并在接收到对象后为其执行那种变更，并返回应用变更后的新对象
+
+
+
+作业：用immer实现todo，大幅简化代码
+
+
+
+
+21:52 11/2谢然=================
+
+组件 Component: 是那个函数或class
+
+react元素:  React.createElement('div') <div></div>
+组件实例:  new 出来的class实例。对于函数组件来说不存在实例
+   new Button()
+
+
+
+
+
+react里面的render props就大致对应于vue里的作用域插槽
+
+
+
+
+
+
+
+
+20:04 11/3谢然====================================
+
+高阶函数：一个函数接收或返回一个函数它就是高阶组件
+
+高阶组件：一个函数接收并返回一个组件那么它就是高阶组件
+
+在React里面，组件是 函数 或是 构造函数（class）
+
+所以高阶组件它也是高阶函数
+
+react里面的高阶组件函数一般以with开头后面跟上功能
+
+以代表这个高阶组件为传入的组件带来了什么功能
+
+
+一般来说高阶组件函数返回的组件会以某种方式使用传入的组件
+
+
+
+
+
+
+react里有多种逻辑利用机制：
+自定义hooks
+以前还有mixin（vue现在都还有）
+render props（接一返回jsx的函数并调用）
+高阶组件
+组件化开发本身也就是逻辑复用机制
+
+
+一般来说写高阶组件都会把新组件接收到的props原样或大部分传给原组件
+
+
+
+
+function debounce(f, time) {
+  var id = 0
+  function WrappedComp(...args) {
+        clearTImeout(id)
+	id = setTimeout(() => {
+  	  f(...args)
+        }, time)
+
+  }
+WrappedComp.displayName = f.displayName ?? f.name
+}
+
+
+
+
+
+组件的命令式与声明式api：
+
+命令式：
+<video />
+var video = document.querySelector('video')
+video.pause()
+viode.play()
+
+
+声明式：
+this.setState({isPlaying: true/false})
+<MyVideo playing={this.state.isPlaying} />
+
+
+web性能优化
+  网络传输的性能优化
+  代码运行的性能优化
+react性能优化
+
+反问：你是想优化运行性能还是优化传输性能？
+
+
+
+
+在react中使用高德地图的大致代码：
+
+function AMap(props, ref) {
+  var container = useRef()
+  
+  useEffect(() => {
+    const map = new AMap.Map(container.current);
+    ref.current = map
+  }, [])
+
+  return <div ref={container}></div>
+}
+
+var map = React.createRef()
+
+<AMap ref={map}/>
+
+
+作业：实现极简的虚拟化列表组件。
+
+
+
+
+20:18 11/4谢然==================
+
+useDeferredValue
+useTransition
+
+
+任何软件都有可能遇到两种反应慢的情况：
+一种是运行时运算量太大，卡顿
+  解决方案是减少一些运算量
+一种是运行时网络太慢，loading
+  只能让加载时的体验更好
+
+
+
+
+
+
+
+
+react 19 中有一个叫use的hook函数
+目前有两种用法：
+
+function Test() {
+  var p = useMemo(() => new Promise(), [xxx])
+
+  var value    = use(p)
+
+  if (xxx) {
+    var color = use(ColorContext)
+    var color = useContext(ColorContext)
+  }
+
+}
+
+var MarkdownDocument = React.lazy(() => import('MarkdownDocument.js'))
+
+<Suspense fallback={<div>'loading...'</div>}>
+  <Test />
+  <Suspense fallback={<div>'loading...'</div>}>
+    <MarkdownDocument />
+  </Suspense>
+</Suspense>
+
+这个use函数可以放进if里，可以像任何函数一个使用
+原理是：它接收的对象，所以不根据自己的顺序来区分，而是根据自己的参数来区分需要返回的值
+一定要传不是现场创建的对象，而是之前已经创建好的对象
+接promise的时候不要传新创建的，而要传在组件外面创建的
+
+
+
+
+
+
+
+有兴趣可以看看这个，尤其对fiber架构有兴趣：
+https://pomb.us/build-your-own-react/
+
+
+
+
+async f() {
+  await xxxxx;
+  await xxxxx;
+  await f();
+  await f();
+  yyyy;
+  yyy;
+}
+
+
+
+function f * () {
+  yield xxxxx;
+  yield xxxxx;
+  yield f();
+  yield f();
+  yyyy;
+  yyy;
+}
+
+
+
+作业：实现以下用法
+<Tabs>
+  <Tab name="Process">woiejfowiejf</Tab>
+  <Tab name="Performance">woiejfowiejf</Tab>
+  <Tab name="StartUp">woiejfowiejf</Tab>
+  <Tab name="User">woiejfowiejf</Tab>
+</Tabs>
+
+
+上面的写法由于实现起来更复杂，所以现在更流行下面的写法(antd)
+
+
+<Tabs xxxx={[ {}, {}, {}   ] }/>
+
+
+
+
+
+<Tree>
+  <Tree>
+	<Tree></Tree>
+	<Tree></Tree>
+	<Tree></Tree>
+  </Tree>
+  <Tree></Tree>
+  <Tree></Tree>
+  <Tree></Tree>
+</Tree>
+
+
+
+
+
+20:09 11/5谢然=================================
+
+组件的children不一定是个数组
+可能是单个值，值可能是任何类型的，也可能是react元素，即jsx
+可能是一个数组里面包含上述可能的类型
+也可能是多层嵌套的嵌套的上述数组
+
+
+
+
+react里面流行的（全局）状态管理库（vuex/pinia的类似物）
+redux
+recoil
+jotai
+zustand
+mobx
+immer
+preact/signal
+voltai
+
+
+mobx与immer的作者是同一个人
+
+
+
+作业：拆分组件并且某个全局状态管理库实现todo app
+要求todo的状态由全局状态管理库来管理并最终被各层级组件使用。
+
+可以通过以下链接创建在线vite项目
+https://vitejs.cn/vite3-cn/guide/
+
+
+
+
+
+
+
+
+
+22:47 11/6谢然======================
+
+
+作业：用react router实现类似微信的界面间跳转功能
+
+
+
+
+20:52 11/7谢然==============
+
+小程序的页面栈有多深：6
+
+
+
+搜索引擎如何决定你的网页排在第几位？
+内容相关度
+  这个在以往需要网页是由服务端渲染的
+    但是随着动态页面的流行，搜索引擎已经可以抓取由框架在前端动态生成的页面了
+页面的加载速度
+https页面
+反向链接数量（反向链接：类似于论文的被引用数量）
+  即有越多的其它页面链接到当前页面，说明当前页面质量越高
+
+
+toB to Business 给特定的人使用的（如售票系统，给公司员工用）
+  一般来说tob的产品功能会更复杂，甚至往往需要培训上岗
+  同时对细节和ui要求不多，能实现功能即可
+  无需seo，所以无需ssr
+  不用追求极速加载与运行速度
+toC to Customer 任何一个自然人都可以使用（如taobao）
+  toc的产品一般功能简单
+  但是对ui和兼容性有比较高的要求
+  需要seo来引流
+  需要追求加载速度
+
+
+
+静态站点生成 (Static-Site Generation，缩写为 SSG）
+ssg适应的网站一般无需用户登陆，即所有用户看到的是一样的内容
+这个时候就可针对每个url预先生成用户会看到的内容，就无需在前端运行组件挂载过程了（或可以省掉一部分时间）
+vue文档网站即为ssg网站
+
+csr client side rendering
+ssr
+ssg
+
+
+nodejs：在js非浏览器的运行环境
+nextjs是运行在nodejs之上的基于react的网站开发框架
+  它集成了react的所有功能并增加了自己的功能如ssr以及ssg
+
+
+
+服务端组件：
+组件运行在服务端，返回的jsx会被react的后端转换为一个特定结构和格式的json
+到了前端后，前端的react也能识别这个json所表达的jsx也即html结构并能知道它的结构中调用了哪些客户端组件。
+从前端是看不到服务端组件的源代码和逻辑的（所以重要逻辑或商业机密型逻辑可以写在服务端组件中），客户端只能得到服务端组件的执行结果，也即是一个表达jsx的json。
+服务端组件没有交互（所以没有effect之类的东西）
+一般来说只是获取数据实现业务逻辑并返回结果（jsx（由json表达）表示的页面结构）
+
+
+
+
+20:02 11/8谢然=========================
+
+
+nodejs是什么，不是什么：
+
+nodejs是一个js的运行环境，类似于浏览器，但js可以调用到的api集合不同
+  在浏览器里，js能调用到的就是dom，bom，http请求等这些api
+  在nodejs里，js程序可以调用到的是操作系统提供的各种api，如文件系统，完全的网络访问能力，启动系统上的其它程序，在系统中运行命令行脚本，在托盘增加图标并为图标增加菜单，对操作系统进行截图，连接数据库
+基本上python，java能干的事情，nodejs都能干
+  另外，运行在nodejs中的js程序，不受跨域限制，因为跨域限制是浏览器给到运行于其中的js的，浏览器以外一般都没有跨域限制。
+但是对软进行各种权限限制现在也比较流行。nodejs未来也会加入相关功能，如只能让程序读写特定文件夹里的文件，网络功能如只能发送http请求（不能访问tcp/udp等功能）
+deno
+node
+bun
+
+除了node（包括deno，bun）还有没有其它的js运行环境呢？
+mongodb数据库，操作这个数据的语言就是js
+Auto.js，是一个安卓app，它可以让你通过自己写js脚本来控制自己的手机
+
+var light = getSmartDevice('主卧的大灯')
+
+light.on('23:30', () => {
+  light.off()
+})
+
+曾经极氪汽车的发布会，他们说，以后会把汽车的api开放出来
+
+微信小程序（包括各种xx小程序）
+
+
+nodejs不是一个框架（如vue，react）不是个库（如lodash）
+
+nodejs一般用来做什么：
+高性能web服务器（即网站的后端）
+命令行工具
+爬虫
+Electron（将浏览器与Nodejs集成到一个环境中）
+  即可以利用浏览器的ui功能，又可以利用nodejs的网络，模块，文件等功能
+  就可以实现很多应用了
+  其实VSCode就是Electron实现的，据说飞书/网易云音乐/最新版QQ也是Electron开发的
+    大部分日常应用都是由“画界面，读写文件，访问网络”这几个功能组合而成的
+  一般用来开发客户端软件（qq，飞书）
+
+前端构建、前端工程化：
+  转义、编译（ts->js,es6->es5,less/sass->css)
+  压缩、混淆（把易读的源代码转换成几乎不可读的，
+  最主要的手段是通过改变形参的名字）
+  打包，构建（（把从入口文件开始的所有使用到的文件
+  打包成一个文件））
+  如vite，webpack，esbuild
+
+
+外设
+
+
+
+但凡数据不是直接存在于内存里面，都可以称做是io数据
+如从硬盘读写数据，从网络收发数据，等待用户的输入都算是IO
+
+
+
+
+真正的线程跟浏览器里的worker的区别：
+线程之间可以共享数据，可以同时访问某份数据（这也是线程的代码难以预测的原因）
+而浏览器的worker之间是不能共享数据的。只能之间发消息，消息中带的数据是复制之后发过去的。从根源上杜绝了同时访问数据可能带来的难以控制的情况
+
+
+
+异步需要通过多线程来实现。只是异步编程环境的系统将多线程的操作对我们的代码隐藏起来了，封装成了回调形式供我们使用。只是我们写的的所有代码在主线程这个单一线程运行。
+
+
+
+zsh/bash/sh/fish  都是  shell，壳，就是跟操作系统沟通的命令行程序
+可以在里面输入命令以控制操作系统启动或关闭程序（进程）
+
+terminal 终端，一般来说终端可以是远程的
+console 控制台，一般是当前机器的
+
+
+
+在linux和max下，文件如果想当做程序执行，它需要有执行权限，没有执行权限的文件是不能执行的。
+chmod +x add
+chmod是修改文件权限的命令
+mod： mode，模式，其中就包含权限
+x表示eXecute
++表示增加这个权限
+add是要操作的文件
+
+chmod  777  add
+一个文件的模式由多个方面组成：
+文件类型，文件对于root用户的权限，对于所属用户的权限，对于所属用户组的权限
+权限分为读、写、执行三种。每个权限由1比特来表示
+rwxrwxrwx
+
+软连接
+硬连接
+  硬连接的多个文件必须存在于同一个磁盘分区中
+
+
+作业：实现一个factor2命令
+分解质因数命令
+
+作业：预习书本
+
+
+20:23 11/9谢然===================
+
+可以认为windows系统没有系统级顶层文件夹
+linux和mac系统的/目录就是系统的顶层文件夹
+
+
+npm install根据文件夹中是否有package.json文件来决定这个文件夹是否是项目的根目录
+
+
+nodejs现在也直接支持import加载es modules
+需要文件本身是模块文件，即扩展名为mjs
+
+
+
+
+
+<script type="javascript"src="a.js"></script>
+传统js文件，直接运行于全局作用域
+不能使用import语句加载其它模块（不确定能不能用import函数，可以自己试一下）
+<script type="module" src="a.js"></script>
+模块文件，文件内是文件自身的作用域
+可以使用import加载其它模块
+可以使用顶层await
+
+
+在node的最新版本里，require可以引入esmodule
+反过来好像也能引，即import也能引入common js模块
+
+
+require(x)，import的相对路径相对于那句路径所在文件
+而其它的一些系统函数如fs.readFile(path)则是相对于工作目录
+
+
+
+
+node中几乎所有回调风格的函数，回调函数都是接收两个参数，第一参数是可能的错误，第二参数是结果
+fs.readFile('aaa.txt', (error, data) => {
+
+})
+
+
+
+
+
+
+registry=https://registry.npmmirror.com
+
+
+
+pnpm为什么快
+缓存已下载的包（通过将所有模块的所有文件通过文件的sha512 hash做为文件名来存储）
+  那怎么还能节省空间呢？
+    因为这个包的代码只会在存于系统中一次，即使它被多个项目所使用
+它通过创建软硬连接来构建node_modules文件夹
+  额外的好处是依赖更清晰
+
+
+
+
+nodejs 的出现早于js中出现typed array 的时间
+
+nodejs里的Buffer跟js标准中的typed array本质是一样的
+但是操作方式（即api）有所不同
+js中的arraybuffer想要操作必须针对其创建类型化数组
+但buffer可以直接读写其中的数据，以任何支持编码方式。
+buffer可以从任何位置读取任何数量的字节（8个字节及以内）然后按任何它支持的方式解析为相应的数据
+也可以把任何支持数据按任何编码方式存储到buffer的任何位置。
+
+
+
+作业：实现一个函数叫listRecursive(dirPath)
+它接收一个文件夹的路径，返回该文件夹所有的文件的名字，注意要包含文件夹内的文件夹里的文件，依此类推
+返回的是一个一维数组，内的项目是每个文件的名字（也可以是文件的完整绝对路径，也可以是相对于工作目录的相对路径）
+提示：fs上的所有函数相对路径都相对于工作目录
+process.cwd()可以获取当前工作目录（不一定需要这个函数）
+
+这个函数写三个版本：同步的，回调的，promise的，async await的。
+
+
+
+21:24 11/10谢然======================
+
+
+http://[2409:8a4c:5286:e6cf:1b3:86a1:17ed:d9f2]:8082
+
+
+node --watch http-static-server.js
+--watch参数可以监控文件的变化，在文件变化的时候自动重启，注意这个参数一定要写在js文件之前，因为写在后面相当于传给我的js文件的参数
+
+
+20:22 11/11谢然=================
+
+内置模块在nodejs交互控制台可以直接用
+
+
+如何调试nodejs程序：
+--inspect-brk参数会让程序停在第一行等待调试
+node --inspect-brk  aaa.js
+node --inspect-brk=9922  aaa.js
+
+只用--inspect参数则不会让程序停在第一行
+node --inspect  aaa.js
+
+
+process.
+cwd()
+chdir()
+version
+argv
+nextTick()
+env
+exit()
+arch架构
+platform平台（操作系统）
+kill()
+
+
+url/querystring已废（用URL替代）
+path/fs/http
+
+__dirname
+__filename
+通过这两个变量可以读到当前模块文件的文件名和文件夹名。它们并不是全局统一的，而是在模块文件内是全局的。
+模块文件是一个函数内运行，它俩实际上是这个函数的参数之二。另外的三个参数是module, exports, require
+这个require是专门针对这个模块创建的，它总是以当前模块为相对路径
+
+
+
+
+20:04 11/13谢然===============
+在node里面，setTimeout等定时器函数返回的不是整数
+而是一个对象，不过它们的返回值还可以像浏览器一样传给clearTimeout等函数
+这个对象的unref方法将会让任务与进程的退出解除绑定关系
+
+
+作业：
+实现一个eventEmitter类
+class EventEmitter {
+  
+}
+
+
+字节序：
+一个占用多个字节的数据，其每个字节在内存的存放的顺序
+BE 大端序
+LE 小端序
+
+
+
+structuredClone结构化克隆算法的实现
+它并不能克隆任意数据，只有支持的数据可以被克隆
+worker之间传递数据时数据就是深度复制后传递到其它worker里的，这个过程的中深度复制就是用这个函数实现的
+
+
+linux系统中，一切皆文件：
+网络连接是文件
+进程是文件
+挂载上的usb硬盘是文件
+打印是文件
+
+
+Stats {
+  dev: 2114, // 设备编号
+  ino: 48064969, // inode结点编号
+  mode: 33188, // 文件权限/模式，需要转换成二进制来看
+  nlink: 1, // 硬连接数据
+  uid: 85,
+  gid: 100,
+  rdev: 0,
+  size: 527, // 文件大小
+  blksize: 4096, // 块大小
+  blocks: 8,
+  atimeMs: 1318289051000.1,
+  mtimeMs: 1318289051000.1,
+  ctimeMs: 1318289051000.1,
+  birthtimeMs: 1318289051000.1,
+  atime: Mon, 10 Oct 2011 23:24:11 GMT,
+  mtime: Mon, 10 Oct 2011 23:24:11 GMT,
+  ctime: Mon, 10 Oct 2011 23:24:11 GMT,
+  birthtime: Mon, 10 Oct 2011 23:24:11 GMT } 
+
+
+
+
+var fd = fs.open('venom2.mkv')
+fd：filedescriptor 文件描述符：整数
+文件句柄：由文件描述符构造的class，可以直接调用class的方法来实现对文件的操作，而不必每次调用函数时传入文件描述符
+
+
+glob
+文件名匹配语法
+
+
+
+
+
+22:28 11/14谢然=================
+
+做为流的使用者，应该关心：
+对于可读流：关心里面的数据是什么，如何从里面读出数据，读出的数据用来干啥
+对于可写流：关心往里面写入什么数据，将要写入的数据从哪里来
+
+--------------------膜
+
+做为流的实现者，应该关心：
+对于可读流的实现者：应该关心数据哪里来，最终让使用读到
+对于可写流的实现才：应该关心使用者写(write)进来的数据应该怎么被处理掉
+
+
+做为流的api的实现者：
+
+
+
+
+
+
+
+
+
+
+
+writable：
+event drain:
+使用者写给它的数据已经被它消耗光了或即将消耗光，请继续写入新的数据
+
+
+
+
+
+
+20:28 11/15谢然================================
+
+
+
+var abc = new AbortController()
+
+fetch(url, {
+  signal: abc.signal
+})
+
+abc.signal.abort()
+
+
+
+
+
+
+流还用在进程间的通信中。
+  process.stdin  进程的标准输入流(可读流）
+    最简单的情况下，命令行里用键盘输入的内容就会成为该可读流的数据源
+  process.stdout 进程的标准输出流（可写流）
+    在最简单的情况下，write进这个流里的数据会显示到命令行控制台里
+  process.stderr 进程的标准错误流（可写流）
+    同上
+    如果以上两者都出现在控制台，数据可能会串起来。但是如果用程序分别接收到这两个流的数据，并且分别导向（pipe）到不同的文件或网络等地方，则可以区分开的
+
+  进程可以通过以上三个流跟其它进程进行通信
+  （当然，进程也可以通过网络跟其它进程通信）
+  （也可以通过返回码process.exit(code)向父进程传递一个单一的信息）
+
+
+20:46 11/17谢然====================
+
+npm i foo   包是安装在项目中，为了在项目中require，但也会带上命令行工具，如果某个包带有命令行工具，则会放在 node_modules/.bin/文件夹里
+
+npm run dev
+npm run build
+会去找package.json里的script字段里的dev/build字段，里面是一段命令，这段命令里的命令会先到node_modules/.bin/里面去找命令
+
+
+npm i -g foo
+
+-g是全局安装，一般是安装一个命令行工作时使用的
+安装在全局的包是不能被某个项目文件夹的代码require的
+
+
+在命令里请求用户输入
+bash:   read -p "prompt"  variable
+c： scanf("%d", &x);
+python:  input('提示')
+browser:  promit('') 但这个不是命令行
+
+
+
+
+22:03 11/18谢然===================
+https://eloquentjavascript.net/2nd_edition/code/file_server_promises.js
+
+
+作业：实现一个/author接口，根据请求头的accept返回不同格式的响应体
+
+
+
+
+21:39 11/19谢然==============================
+
+
+
+浏览器的事件循环：
+浏览器将任务分为两种：
+微任务
+宏任务
+
+微任务总是在调用栈里的函数清空后立马执行，调用栈清空后，执行微前，浏览器是不做渲染的
+
+宏任务在执行前，浏览器还会绘制一下dom，即paint（当然也会有layout）
+
+宏任务：setTimeout/Interval，click事件这种,postMessage
+微任务：promise的回调，queueMicrotask，（注意浏览器里没有nextTick）, MutationObserver
+
+MutationObserver可以监控一个dom元素的变化，变了以后它会调用我们提供的函数，是通过微任务的方式调用的该函数
+var mo = new MutationObserver(function moFunc() {
+  console.log(1)
+})
+mo.observe(document.body, {attributes: true})
+document.body.setAttribute('foo', 'bar') // 将会触发log（1）
+
+
+promise的回调在promise成功的那一记得被放进微任务队列（或说者promise回调队列）
+
+
+async function foo() {
+  console.log(4)
+  await baz()
+  console.log(6)
+  await baz()
+  console.log(6)
+}
+async function baz() {
+  console.log(1)
+}
+async function bar() {
+  console.log(2)
+  await Promise.resolve(5)
+  console.log(3)
+}
+foo() 
+bar()
+等价于：
+function foo() {
+  console.log(4)
+  baz().then(() => {
+    console.log(6)
+    // baz().then(() => {
+    //   console.log(6)
+    // })
+  })
+  
+}
+function baz() {
+  console.log(1)
+  return Promise.resolve()
+}
+function bar() {
+  console.log(2)
+  Promise.resolve(5).then(() => {
+    console.log(3)
+  })
+}
+foo() 
+bar()
+
+
+
+
+搜：事件循环面试题
+
+
+
+
+
+
+
+作业答案：
+
+server.on('request', (req, res) => {
+  if (req.url == '/author') {
+    var accept = req.headers['accept']
+
+    if (accept == 'text/plain') {
+      res.writeHead(200, {
+        'content-type': 'text/plain; charset=utf8'
+      })
+      res.end("I'm Marjin Heveberk .....")
+    } else if (accept == 'text/html') {
+      res.writeHead(200, {
+        'content-type': 'text/html; charset=utf8'
+      })
+      res.end(`
+        <h1>Author</h1>
+        <span>Marjin</span>
+        <div>intro...</div>
+      `)
+    } else if (accept == 'application/json') {
+      res.writeHead(200, {
+        'content-type': 'application/json; charset=utf8'
+      })
+      res.end(JSON.stringify({
+        name: 'Marjin Heveberk',
+        book: 'eloquent javascript',
+      }))
+    } else {
+      res.end('unkown requst type')
+    }
+
+  } else {
+    res.end()
+  }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+21:11 11/20谢然===============
+
+
+express的use方法对路径的处理与get/post/put/delete等方法对路径的处理不一样，use时，请求路径只要以给定的路径开始就会进入该中间件
+而get/post/put/delete等方法的路径，则是要完全匹配（最后一个斜杠可以选择不匹配）
+同时，带path的use，后面的中间件读取到的req.url是以路径开头的后续部分
+
+
+http head请求方法：相当于获取get请求的响应头
+
+
+
+触发浏览器下载对话框的响应头
+content-disposition:
+attachment; filename="package.json"
+
+浏览器里<a download="xxx.yyy"></a>也可以触发下载，但它跟上面的原理不一样的
+
+
+
+express中如何算出错了？
+1 中间件抛出的错误被express捕获到
+2 调用next的时候传入了第一个参数（也是可以的唯一一个）
+
+
+
+
+
+
+app.use(express.json())
+
+app.use((req, res, next) => {
+  if (req.headers['content-type'] == 'application/json') {
+    var body = ''
+    for await (var d of req) {
+      body += d.toString()
+    }
+    req.body = JSON.parse(body)
+  } else {
+    next()
+  }
+})
+
+
+
+
+
+
+19:58 11/21谢然=============================
+
+
+npm run xxx 是到package.json的script中的xxx字段中执行对应的命令
+特别的当xxx为start时，npm run start可以简单为npm start
+甚至于后来npm xxx只要xxx不是npm的子命令，它都会去package.json的scripts字段中找对应命令去执行
+
+
+
+https://www.npmjs.com/package/debug 周下载量3.5亿
+
+
+
+
+
+
+定制json的序列化与反序列化：
+console.log(   JSON.stringify({a:() => 2,b:2,c:[1,2,3]},  function(key, val){
+  if (typeof val == 'function') {
+    return '#FUNCTION ' + val.toString()
+  } else {
+    return val
+  }
+  
+}, 4)  )
+
+
+
+JSON.parse(text, (key, val) => {
+
+  if (typeof val == 'string' && val.startsWith('#FUNCTION')) {
+    return eval( val.slice(10) )
+  } else {
+    return val
+  }
+})
+
+
+
+
+
+断点续传是怎么实现的：
+通过http的range请求求头，只请求资源特定的部分
+
+
+
+
+
+
+
+
+jsonp：
+通过script标签可以跨域加载其它域的资源
+为什么？xhr、fetch有跨域限制，为什么script加载没有限制？
+xhr加载读到的是资源的内容，内容想怎么用就怎么用
+script的加载，是浏览器读到【代码】的内容，并且直接运行，期间不是我们的程序在加载并运行该代码
+
+加载其它地方的代码且直接运行，是有风险的，是我们信任服务器能给我们返回期望的代码。服务器发代码让浏览器在我们的页面运行它，对服务器来说除了流量以外没有任何风险，因为那个代码本身就是公开的。整个过程中我们从未看到过该代码的完整内容
+
+而xhr加载资源是服务器信任我们，愿意把资源的内容给到我们做任意的处理。这个过程我们是拿到了资源的完整内容的，资源完全由我们处置
+
+以上是两个不同的事情，所以一个有跨域限制一个没有，不具备可比性。
+
+
+
+
+
+
+
+var script = document.createElement('script')
+script.src = 'https://api.weather.com/310000.js'
+/**
+  var weatherForcase = {
+    city: 'hangzhou',
+    geolocation: {lat:  log: },
+    tem: { high:28, low: 15},
+    forcase: '下雨',
+  }
+
+*/
+document.body.append(script)
+
+script.onload = () => {
+  console.log(weatherForcase)
+  showWeatherInPage(weatherForcase)
+}
+
+
+
+
+jsonp与普通请求的区别：
+由于是跨域的，所以不能得到响应头的数据
+由于是通过script的src属性发起的请求，所以只能是get请求，参数只能带在url上，不能有请求体
+
+
+极简实现（没考虑出错，没考虑超时等问题，也没有写成promise风格的）：
+function jsonp(url, callback) {
+  var script = document.createElement('script')
+  var CALLBACK_NAME = 'jsonp_callback' + Math.random().toString().slice(2) + Date.now()
+  
+  window[CALLBACK_NAME] = (data) => {
+    callback(data)
+  }
+  
+  script.src = url + '&callback=' + CALLBACK_NAME
+  document.body.append(script)
+
+  script.onload = () => {
+    delete window[CALLBACK_NAME]
+    document.body.removeChild(script)
+  } 
+}
+
+jsonp('https://api.github.com/search/repositories?q=java', (data) => {
+  console.log(data)
+})
+
+
+
+
+
+21:25 11/23谢然==========================
+
+http basic authorization:
+
+get / http1.1
+===============
+http/1.1 401 unautorized
+www-authorization: realm=basic
+===============
+弹窗要求用户输入账户
+==============
+get / http/1.1
+authorization: Basic base64(user:pass)
+=============
+http/1.1 200 OK
+
+
+
+
+cookie:
+
+
+POST /login HTTP/1.1
+====================
+HTTP/1.1 301 Found
+Set-Cookie: a=b; Expires=xxxxxx; Path=; 是否仅https生效; 
+Set-Cookie: x=yyyy; 过期时间; 路径; 是否仅https生效; 
+Location: /
+====================
+GET / HTTP/1.1
+Cookie: a=b; x=yyyy
+====================
+HTTP/1.1 200 OK
+
+登陆成功后看到的页面
+====================
+
+
+
+
+
+22:14 11/24谢然===================
+"database"这个词在关系型数据库中有特殊的含义：
+即多个表的文件夹
+
+而sqlite里这个概念被弱化了，因为一个sqlite的数据库文件就是一个"database"，里面包含多个表
+
+in mysql:
+CREATE DATABASE testDB
+use database testDB
+SHOW DATABASES
+
+
+create strict table foo (name string, age number);
+
+
+
+leetcode database题目
+175
+181
+182
+183
+197
+595
+596
+620
+
+
+
+
+
+20:13 11/25谢然=======================
+
+表的连接：
+
+交叉连接
+
+
+
+并发：同时开始发生，如同时有很多用户发来请求
+并行：同时运行，时间跨度可能较长
+
+
+
+RDBMS 关系型数据库管理系统
+ralational db  management system
+
+
+
+
+
+21:00 11/27谢然====================
+
+js binding
+python binding
+指其它语言实现的某种功能在js/py语言中以几乎相同的形式出现，但函数实际调用的是更底层的语言版本的实现，上层语言自身什么也没做
+
+
+
+什么是cookie？
+什么是session？
+什么是token？
+
+
+
+前端cookie的操作：
+document.cookie = <the value of Set-Cookie response header>
+document.cookie  读取到的内容等价于  <the cookie request Header>
+
+
+
+作业：
+为用户密码加盐后哈希存储
+  login
+  register
+  修改密码
+
+
+
+
+
+20:14 11/28谢然===============================
+
+
+
+刷库：业务逻辑以及数据库表结构发生变化后，有些时候需要将数据库的数据也批量更新为匹配新的业务逻辑的数据，这个时候就需要刷库了
+这个操作非常敏感，因为它会对数据进行永久性变更，一旦操作错了，损失是无法估量的！
+所以操作前一定要备份数据
+
+
+
+
+
+网站常见的安全漏洞：
+XSS Cross Site Scripting 跨站脚本攻击（此处跨站指跨越整个站点，即可能影响整个站点）
+  解决方案就是把用户输入的东西进行转义后显示，而不是直接显示。即不要将用户输入的东西当代码
+
+csrf Cross Site Request forgery 跨站请求伪造（此时跨站指的是跨越两个不同的站点）
+  某其它站点在同一浏览器向我们的站点服务器发起请求，以往，浏览器会自动带上我们站点的cookie，即带上了用户的登陆身份，相当于这个请求是伪造用户发出的
+  但是csrf攻击已死，因为现代浏览器默认不在跨站请求中携带cookie
+  有一个cookie的选项叫sameSite可以设置跨站时是否以及如何携带cookie
+   那以前是怎么解决的呢？
+     以前是再额外携带一个其它站点无法获取到的csrf token，跨站请求只会自动带cookie，csrf token只在自己的页面，其它站点的页面无法获取到，发到我们服务器的请求就会认为是无效的
+
+SQL Inject sql注入
+  用户输入的内容被服务器“拼接”成了sql语句并执行，有可能触发各种服务器的漏洞。
+  sql注入在2000年前后的时候几乎所有的网站都有
+  解决方案：sql语句的占位符，占位符的内容一定是不会被当成代码执行的，而是当成语句中的数据
+
+
+
+
+
+
+20:09 11/29谢然============================
+
+
+koa跟express几个重要的不同点：
+
+中间件函数只接ctx，next两个参数
+koa的中间件是异步函数
+koa的next调用可以被await，等待后续中间件执行完成后再继续执行当前中间件的功能
+而在express4中，next调用一般应该是一个中间件的最后一句话
+
+
+
+
+
+
+
+app.use((req, res, next) => {
+  if (req.is('json')) {
+    var body = ''
+    req.on('data', data => {
+      body += data.toString()
+    })
+    req.on('end', () => {
+      req.body = JSON.parse(body)
+    })
+  } else {
+    next()
+  }
+})
+
+app.use( express.json() )
+
+
+
+
+
+22:59 2024/12/17==========================
+
+
+打包结果文件名为什么带hash
+  开发模式与生产构建有什么区别?
+    很像汽车在开发的时候没装座椅,线束是裸漏在外的
+    而上线版本就像正式售卖的汽车,线束已经包了,颜色,座椅也都到位了
+  开发模式：
+    用最快的速度编译（因为很多时候我们写的不是纯js了，而是jsx/.vue文件）
+    不去掉代码中的注释，log等等
+  生产构建：
+    将代码中不需要东西全部去掉（如log等）
+    将代码压缩（去掉能去掉的所有符号，空白等）
+    将代码混淆（将函数的形参以及局部变量改成更短的名字，一是减少代码体积，二是保护源代码）
+    还有一些其它方式来优化代码的运行速度
+      如react中，生产版本中Strict组件将无效
+      <Strict>
+        <App />
+      </Strict>
+      react在生产环境中不会进行prop类型检查
+        prop类型检查有两种：
+          ts
+          运行时检查（在生产构建中，运行时检查也关闭了）
+    由于生产构建要做的事情比较多，所以它比较慢，所以开发过程中为了更快的看到效果，不会在开发过程中持续的做生产构建
+    直到开发到一个阶段，可以发布了，进行一次生产构建
+  为什么产生构建的结果代码中，文件名都有一个hash后缀？
+    其它该hash是通过相应文件的内容计算出来的
+    如果只用一句话来解释的话，就是不可变数据（在这里是不可变url）
+    因为文件内容发生变化的话，其文件名才会变，最终url才会变
+    而文件内容如果不变的话，url是不变的
+    目的是为了静态资源都可以使用强缓存并且不影响升级（因升级后url变了，会请求新的资源）
+    另一个额外的好处是网站可以多版本共存（只是多版本共存使用版本号形式的url也可以）
+
+    浏览器对同一个域名同时最多进行6-8个http请求
+
+    http://www.aaa.com/common.js
+    这种资源引用方式不能使用强缓存
+
+    <script src="http://www.aaa.com/common.js?v=2.2.0"></script>
+    <script src="http://www.aaa.com/vendor.js?v=2.2.0"></script>
+    <script src="http://www.aaa.com/app.js?v=2.2.0"></script>
+
+
+    <script src="http://www.aaa.com/common.js?v=2.3.0"></script>
+    <script src="http://www.aaa.com/vendor.js?v=2.3.0"></script>
+    <script src="http://www.aaa.com/app.js?v=2.3.0"></script>
+
+
+    
+    <script src="http://www.aaa.com/common.js?hash=234234"></script>
+    <script src="http://www.aaa.com/vendor.js?hash=owef3"></script>
+    <script src="http://www.aaa.com/app.js?hash=3defs"></script>
+
+
+    
+    <script src="http://www.aaa.com/common.js?hash=234234"></script>
+    <script src="http://www.aaa.com/vendor.js?hash=owef3"></script>
+    <script src="http://www.aaa.com/app-4234563.js"></script>
+
+
+    强缓存：即浏览器不发请求，直接使用本地版本
+           强缓存一般只缓存js，css，图片这样的资源，不缓存html页面
+           浏览器缓存资源是以url为基准的
+    cdn：内容分发网络，content deliver network，一般用于分发静态内容
+      何为静态内容：url与内容是一一对应的，url确定了，url的内容就确定了
+         即不需要在固定的url上返回变化的内容
+    而在固定的url上计算出不同的页面html的服务器一般称为应用服务器
+
+
+babel原理介绍
+  babel是一个js编译器
+  用来将新版本的js编译到老版本以让旧浏览器能够运行
+  （因为任何时候都是新旧浏览器同时存的，因为我们无法强制用户升级他的浏览器）
+  babel自己其实并不能编译任何js代码到任何版本
+  所有的代码转换都是通过扩展机制
+  babel有两种扩展机制：
+    一种是plugin
+      一个plugin负责一个语法的转换
+    一种叫preset（预置）
+      一个preset是若干个plugin的集合
+    最常用的preset：env
+      它会根据你设定的环境（environment）来选择合适的插件将代码编译于目标环境（env）可以运行的程度
+  面试中更多会问及babel的原理：
+    先对代码进行词法分析（tokenize）
+    然后语法分析，得到语法树
+    遍历(traverse, visit)语法树并在遇到相应的结点时调用相应的插件对语法树结点进行转换
+    将转换后的语法树转回代码
+    (插件需要声明它自己需要转换什么类型的结点的)
+    那你有写过插件吗？
+      没写过，但是大概看过怎么写
+  stage-0,1,2,3是什么？
+    是处于各个不同阶段的js语法
+    js语言现在是有一个标准委员会
+      语言的语法/功能/api是通过讨论后确定并最终添加到语言中的
+        讨论和测试是分阶段的
+          提出来就是state-0
+          被任何一个浏览器实现就是stage-1
+          被不只一个浏览器实现就是stage-2
+          当要在下一年进行正式标准时，本年度该特性就是state-3
+          
+  class Bar {
+    constructor() {
+      this.intervalId = setInterval(() => {
+        console.log(1)
+      })
+    }
+    [Symbol.dispose]() {
+      clearInterval(this.intervalId)
+    }
+  }
+
+  if (true) {
+    using foo = new Bar()
+  }
+  using foo = new Bar()
+  用using声明的变量会在其作用域结束时自动销毁该变量指向的对象所占用的资源
+  
+
+webpack原理及与vite/snowpack等的对比
+  你会配webpack吗？
+    您配吗？
+  官方人员曾官方活动吐槽自己不会配置webpack
+  webpack是最早的一个可以打包不只js的打包工具
+  在webpack之前有browserify，它只能把commonjs模块打包成一个文件以在浏览器中运行
+    但browserify只能打包js模块，不打包任何其它文件
+  webpack则可以打包任何扩展名的文件，包括css，jpg，png等
+
+  // webpack通过loader来实现引入任意扩展名的文件
+  // loader会将相应格式的文件转换为js以让它能被以标准的方式打包
+  // plugin则是提供除loader功能以外的扩展功能
+  // 以往各种需要的功能都要自己配置，如devServer，模块热加载（HMR）
+  // webpack打包慢，开发过程中也慢
+  // 除了有vite，还有rspack（字节用rust语言实现的webpack替代品，它可以兼容webpack的很多插件和loader）
+
+  vite的与webpack
+    vite利用了浏览器的模块加载能力，它只需要把代码中的import语句后面的模块转换为一个url
+    并且当浏览器对这个url的请求打到vite之后，它能返回一个正确的esm模块
+    vite在开发阶段是不打包的，直接将模块转换并给出浏览器能解析并运行的esm的url
+    这也是它为什么快的原因
+    webpack在开发阶段也是通过打包来运行的，只是打包过程没有优化，所以快（相对于webpack自己的构建过程来说）
+
+
+
+
+
+22:56 2024/12/18===============================================
+
+
+
+
+
+
+微信小程序
+  微信小程序的架构:
+    它运行的是js,通过jscore(ios),webview(android)运行js程序
+      但是这个js程序不是在像浏览器的window全局作用域一样运行的
+      微信小程序为我们的js代码抽象了一个运行环境出来,该环境中没有浏览器中与dom相关的api
+        一些通用的api是存在的,如Blob,File,fetch
+        但bom,document是没有的
+        运行在小程序环境中的js只能调用环境提供的api
+  常见的js语言运行环境:
+    浏览器:可以访问dom api与http等api
+    nodejs/deno/bun:可以访问操作系统api(系统调用)
+    electron:浏览器与nodejs的结合体,可以访问浏览器与nodejs的api集合
+    autojs:运行在安卓手机上,可以访问由autojs安卓程序提供一套控制安桌手机的api
+    mongodb:一个非关系型数据库(NoSQL数据库),其交互式命令行是用js语言的
+    微信小程序:运行在微信小程序的环境中,只能调用微信小程序环境提供的api
+  js/wxss/wxml
+    js: 基本上只需要按照固定的方式去书写(非常类似于vue)
+    wxss: 有一个额外的单位x(rpx),750rpx就是手机屏幕的宽度
+    wxml: 没有div/span等html中的标签,但是有它自定义的标签如view/text/img/input
+  微信小程序有很多坑:
+    focus的时候选中文本框中的文字无法实现
+    文本框方便的输入正负浮点数很难实现
+  微信小程序有点卡:
+    即使是最简单的演示程序,它也有会有明显的卡顿感
+    (小程序中现在也可以嵌套网页了,这种可能不会卡)
+  微信小程序有很多同类如[公司名/产品名]小程序
+    支付宝小程序
+    dy小程序
+    百度小程序
+    头条小程序
+    xxx小程序
+    它们的开发模式都一样.
+    甚至于当年支付宝小程序刚刚上线的时候,其文档中出现了"微信xxx"的字样.
+  还有小程序的上层框架,
+    如uni-app
+    它会把你按uniapp框架书写的程序转换到vue/小程序/react/react native等平台运行
+    用过uniapp吗?
+      不管用没用过,我可以会.
+    但是uniapp也有不少坑
+      首先,它是框架的框架
+      但是小程序框架本身就可能有一堆坑
+      基于一堆坑的框架的框架如果再有坑的话....
+
+electron
+  浏览器+nodejs
+  浏览器:
+    UI+交互+网络请求
+  nodejs:
+    操作系统api如
+    文件操作,网络操作,进程线程
+  另一大特色是用其开发的桌面软件是跨平台的
+  案例：
+    qq新版
+    vscode
+    飞书
+  运行机制：
+    后台进程
+      其实在启动程序的时候是先启动后台进程
+      然后后台进程又启动了窗口进程
+        win = new BrowserWindow({url: './index.html'})
+        win.on('close', () => {
+          if (app.openWindows.length == 0) {
+            app.exit()
+          }
+        })
+    前台进程
+      用户能看得见的窗口，其实就是加载了页面的浏览器窗口
+谷歌浏览器扩展程序
+  browseraction即在浏览器右上角扩展程序图标中增加一项
+    点击可以弹出个弹窗
+    或者打开一个新的页面
+    或者在当前页面执行一段程序
+
+
+三方支付流程
+JWT JSON Web Token
+  将session相关的信息签名后并进行(部分)加密后存在cookie里,由浏览器带到它请求到的服务器
+  浏览器存了这个数据,但看不了(加密的部分)
+  有点类似于档案袋
+
+webrtc
+  RTC
+  Real Time Communication 实时通信
+  两个网页之间可以建立直接的连接
+  建议了解peerjs库

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>todo vue</title>
+</head>
+<body>
+
+  <span id="app"></span>
+
+  <script src="./vue-2.7.16.js"></script>
+  <script>
+    var app = new Vue({
+      template: `
+        <div id="app">
+          <h1>Todos</h1>
+          <div>
+            <input type="checkbox" @click="toggleAll()" :checked="isAllChecked">
+            <input type="text" ref="inputBox" @keydown.enter="addTodo" placeholder="What needs to be done?">
+          </div>
+          <ul :class="   'visible-' + activeCategory   ">
+
+            <li ref="todoElements" :key="todo.id" :class="{active: todo.completed == false, completed: todo.completed == true}" v-for="(todo, idx) of todos">
+              <input type="checkbox" v-model="todo.completed">
+              <span v-if="editingIndex !== idx" @dblclick="editingIndex = idx">{{ todo.text }}</span>
+              <input v-focus:aaa:bbb.c.d.e="oijfwoer" v-else :value="todo.text" @blur="editingIndex = -1" @keydown.escape="editingIndex = -1" @keydown.enter="todo.text = $event.target.value; editingIndex = -1">
+              <button @click="deleteTodo(idx)">&times;</button>
+            </li>
+          </ul>
+          <div>
+            <span>{{ leftCount }} item{{ plura }} left</span>
+            <div>
+              <label><input type="radio" v-model="activeCategory" value="all"> All</label>
+              <label><input type="radio" v-model="activeCategory" value="active"> Active</label>
+              <label><input type="radio" v-model="activeCategory" value="completed"> Completed</label>
+            </div>
+            <button :ref="el => { btn.value = el }" v-if="showClearButton" @click="clearCompleted">clear completed</button>
+            
+          </div>
+        </div>
+      `,
+      created() {
+        // debugger
+      },
+      mounted() {
+        // document.querySelector('input + input').focus()
+        this.$refs.inputBox.focus()
+      },
+      el: '#app',
+      // 这里放程序的数据或状态数据
+      data() {
+        var x = {
+          btn: {value: null},
+          todos: [
+            {
+              id: 'dc',
+              text: 'eat',
+              completed: true,
+            }, {
+              id: 'es',
+              text: 'drink',
+              completed: false,
+            }, {
+              id: 'ev',
+              text: 'sleep',
+              completed: true,
+            }
+          ],
+          activeCategory: 'all',
+          editingIndex: -1, // 正在被编辑的元素的下标
+        }
+        return x
+      },
+      methods: {
+        toggleAll() {
+          if (this.todos.every(it => it.completed == true)) {
+            this.todos.forEach(it => {
+              it.completed = false
+            })
+          } else {
+            this.todos.forEach(it => {
+              it.completed = true
+            })
+          }
+        },
+        addTodo(e) {
+          var text = e.target.value.trim()
+          if (text) {
+            var todo = {
+              text,
+              completed: false,
+            }
+            this.todos.push(todo)
+            e.target.value = ''
+          }
+        },
+        deleteTodo(idx) {
+          this.todos.splice(idx, 1)
+        },
+        clearCompleted() {
+          this.todos = this.todos.filter(it => it.completed == false)
+        },
+      },
+      computed: {
+        leftCount() {
+          console.log('computing left count...')
+          return this.todos.filter(it => it.completed == false).length
+        },
+        showClearButton() {
+          return this.todos.some(it => it.completed == true)
+        },
+        isAllChecked() {
+          return this.todos.every(it => it.completed == true)
+        },
+        plura() {
+          return this.leftCount > 1 ? 's' : ''
+        },
+        now() {
+          return Date.now()
+        },
+      },
+      directives: {
+        focus: {
+          inserted(el) {
+            el.focus()
+          }
+        }
+      }
+    })
+
+    // class Vue {
+    //   constructor(options) {
+    //     this.initEvents() // 初始为this为一个事件监听器
+    //                       // this.on('event', () => {})
+    //     this.initLifeCycle()
+    //     this //  不是{}
+    //     options.beforeCreate.call(this)
+    //     this.initReactivity() // 初始化响应式
+    //                           // 这一行之后data上的字段就被改成了getter/sertter
+    //     options.created()
+    //   }
+    // }
+
+
+
+  </script>
+</body>
+</html>

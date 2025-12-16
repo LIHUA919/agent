@@ -1,0 +1,113 @@
+<script src="vue-3.5.11.global.js"></script>
+
+<div id="app">
+</div>
+
+<script>
+  // import { createApp } from 'https://esm.sh/vue/dist/vue.esm-browser.js'
+  const { createApp } = Vue
+
+  var app = createApp({
+    template: `
+      <TodoApp/>
+    `,
+  })
+  
+  app.component('TodoApp', {
+    template: `
+      <div>
+        <TodoHeader :todos="todos" @new-todo="addNewTodo"/>
+        <TodoList :todos="todos"/>
+        <TodoFooter/>
+      </div>
+    `,
+    data() {
+      return {
+        todos: [{
+          text: 'eat',
+          completed: true,
+        },{
+          text: 'drink',
+          completed: false,
+        }]
+      }
+    },
+    methods: {
+      addNewTodo(todoText) {
+        this.todos.push({
+          text: todoText,
+          completed: false,
+        })
+      }
+    }
+  })
+  app.component('TodoHeader', {
+    props: ['todos'],
+    emits: ['new-todo'],
+    template: `
+      <div>
+        <input type="checkbox" :value="isAllCompleted"/>
+        <input type="text" v-model.trim="todoInput" @keydown.enter="addTodo" />
+      </div>
+    `,
+    data() {
+      return {
+        todoInput: '',
+      }
+    },
+    computed: {
+      isAllCompleted() {
+        return this.todos.every(it => it.completed == true)
+      }
+    },
+    methods: {
+      addTodo() {
+        if (this.todoInput) {
+          this.$emit('new-todo', this.todoInput)
+          this.todoInput = ''
+        }
+      }
+    }
+  })
+
+  app.component('TodoList', {
+    props: ['todos'],
+    template: `
+      <ul>
+        <TodoItem v-for="(todo,idx) of todos" :todo="todo" :index="idx"/>
+      </ul>
+    `,
+  })
+  app.component('TodoItem', {
+    props: ['todo', 'index'],
+    template: `
+      <li>
+        <input type="checkbox" v-model="todo.completed" />
+        <span>{{ todo.text }}</span>
+        <button>&times;</button>
+      </li>
+    `,
+  })
+  app.component('TodoFooter', {
+    template: `
+      <div>
+        <TodoLeftCount/>
+        <TodoVisibleSelect/>
+        <TodoClear/>
+      </div>
+    `,
+  })
+
+  app.component('TodoLeftCount', {
+    template: `<div></div>`,
+  })
+  app.component('TodoVisibleSelect', {
+    template: `<div></div>`,
+  })
+  app.component('TodoClear', {
+    template: `<div></div>`,
+  })
+  
+  
+  var mountedApp = app.mount('#app')
+</script>

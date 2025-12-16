@@ -1,0 +1,30 @@
+<script src="vue-3.5.11.global.js"></script>
+
+<div id="app">
+  {{ message }}
+  {{ numbers }}
+</div>
+
+<script>
+  // import { createApp } from 'https://esm.sh/vue/dist/vue.esm-browser.js'
+  const { createApp } = Vue
+
+  var app = createApp({
+    beforeCreate() {
+      debugger
+    },
+    created() {
+      debugger
+    },
+    data() {
+      debugger
+      var x = {
+        message: 'Hello Vue! <em>aaa</em> ',
+        numbers: [1,2,3,4],
+      }
+      return x
+    },
+    methods: {
+    }
+  }).mount('#app')
+</script>

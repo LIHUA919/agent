@@ -1,0 +1,334 @@
+<!-- <script src="imgs.js"></script> -->
+<!-- <script src="https://caolan.github.io/async/scripts/async.js"></script> -->
+<script>
+  // https://xieranmaya.github.io/images/cats/cats.json
+  // 图片请请求这个地址获取。
+  // 自行查看json结构
+  function get(url, callback) {
+    var xhr = new XMLHttpRequest()
+    xhr.open('get', url)
+    xhr.onload = () => {
+      callback(JSON.parse(xhr.responseText))
+    }
+    xhr.send()
+  }
+
+  // imgs = imgs.slice(0, 18)
+
+  // 下载给定url的图片，下载完成后调用callback
+  function downloadImg(url, callback) {
+    var img = new Image()//document.create('img')
+    img.onload = function(){
+      callback(img)
+    }
+    img.onerror = function(){
+      callback(img)
+    }
+    img.src = url
+  }
+
+
+
+  function downloadOneByOne(callback) {
+    var tq = new TaskQueue1()
+    get('https://xieranmaya.github.io/images/cats/cats.json', imgs => {
+      imgs.forEach(img => {
+        tq.addTask(next => {
+
+          downloadImg(img.fullUrl, () => {
+            next()
+          })
+
+        })
+      })
+    })
+  }
+
+
+  // 同时下载两张图片，都下载完成后调用callback
+  function downloadTwoImg(url1, url2, callback) {
+    var count = 0
+    downloadImg(url1, () => {
+      count++
+      if (count == 2) {
+        callback()
+      }
+    })
+    downloadImg(url2, () => {
+      count++
+      if (count == 2) {
+        callback()
+      }
+    })
+
+  }
+
+  function chunk(array, size) {
+    var result = []
+    for (var i = 0; i < array.length; i+= size) {
+      result.push(array.slice(i, i + size))
+    }
+    return result
+  }
+  //两个一组，都下载完以后，下载下一组
+  function downloadTwoByTwo(callback) {
+    get('https://xieranmaya.github.io/images/cats/cats.json', imgs => {
+      series(chunk(imgs, 2).map(     ([img1, img2]) => {
+        return (next) => {
+          downloadTwoImg(img1.fullUrl, img2.fullUrl, () => {
+            next()
+          })
+        }
+      }), () => { console.log('okkkk')})
+    })
+  }
+
+
+  //最多同时下载4张，有任何一张下载完，就开始一张新的下载
+  function downloadMax3(callback) {
+
+    get('https://xieranmaya.github.io/images/cats/cats.json', imgs => {
+
+
+      parallelLimit(imgs.map(img => {
+        return (next) => {
+          downloadImg(img.fullUrl, () => {
+            next()
+          })
+        }
+      }),  4,  () => {
+        console.log('所有图片下载完成')
+      })
+
+
+    })
+
+  }
+
+
+</script>
+
+
+<script>
+  class TaskQueue1 {
+    constructor() {
+      this._tasks = []
+      this._running = false
+    }
+    _startNextTask() {
+      if (this._tasks.length == 0) {
+        this._running = false
+      } else {
+        var task = this._tasks.shift()
+        task(  this._startNextTask.bind(this)  )
+      }
+    }
+    addTask(task) {
+      if (this._running) {
+        this._tasks.push(task)
+      } else {
+        this._running = true
+        task(  this._startNextTask.bind(this)  )
+      }
+
+      return this
+    }
+  }
+
+  class TaskQueue2 {
+    constructor() {
+      this._tasks = []
+      this._running = false
+      this._next = this._startNextTask.bind(this)
+    }
+    _startNextTask() {
+      if (this._tasks.length == 0) {
+        this._running = false
+      } else {
+        var task = this._tasks.shift()
+        task(  this._next  )
+      }
+    }
+    addTask(task) {
+      if (this._running) {
+        this._tasks.push(task)
+      } else {
+        this._running = true
+        task(  this._next  )
+      }
+
+      return this
+    }
+  }
+
+  // class fields
+  class TaskQueue3 {
+    _tasks = []
+    _running = false
+    _next = () => {
+      if (this._tasks.length == 0) {
+        this._running = false
+      } else {
+        var task = this._tasks.shift()
+        task(  this._next  )
+      }
+    }
+    // constructor() {
+    //   // this._tasks = []
+    //   // this._running = false
+    //   this._next = () => {
+    //     if (this._tasks.length == 0) {
+    //       this._running = false
+    //     } else {
+    //       var task = this._tasks.shift()
+    //       task(  this._next  )
+    //     }
+    //   }
+    // }
+    // _startNextTask() {
+    //   if (this._tasks.length == 0) {
+    //     this._running = false
+    //   } else {
+    //     var task = this._tasks.shift()
+    //     task(  this._next  )
+    //   }
+    // }
+    addTask(task) {
+      if (this._running) {
+        this._tasks.push(task)
+      } else {
+        this._running = true
+        task(  this._next  )
+      }
+
+      return this
+    }
+  }
+  
+  var tq = new TaskQueue()
+
+  tq.addTask(function task(next) {
+    console.log(1)
+    next()
+  }).addTask(function task(next) {
+    
+  }).addTask(function task(next) {
+    
+  })
+
+
+
+  class TaskQueue4 {
+    constructor(parallelLimit = 1) {
+      this._tasks = []
+      this._running = 0 // 此时running表示正在运行的任务数量
+      this.parallelLimit = parallelLimit
+
+      this._next = () => {
+        if (this._tasks.length == 0) {
+          this._running--
+        } else {
+          var task = this._tasks.shift()
+          task(  this._next  )
+        }
+      }
+    }
+    addTask(task) {
+      if (this._running == this.parallelLimit) {
+        this._tasks.push(task)
+      } else {
+        this._running++
+        task(  this._next  )
+      }
+
+      return this
+    }
+  }
+
+  var tq4 = new TaskQueue4(2)
+  tq4.addTask(next => {
+    console.log(1)
+    setTimeout(next, 1000)
+  })
+  tq4.addTask(next => {
+    console.log(2)
+    setTimeout(next, 2000)
+  })
+  tq4.addTask(next => {
+    console.log(3)
+    setTimeout(next, 3000)
+  })
+  tq4.addTask(next => {
+    console.log(4)
+    setTimeout(next, 1000)
+  })
+  tq4.addTask(next => {
+    console.log(5)
+    next()
+  })
+
+  
+// 串行执行给定的任务，所有任务执行完成后调用allDone
+function series(tasks, allDone) {
+  var i = -1
+  startNextTask()
+
+  function startNextTask() {
+    i++
+    if (i < tasks.length) {
+      tasks[i](startNextTask)
+    } else {
+      allDone()
+    }
+  }
+}
+
+
+function parallel(tasks, allDone) {
+  var completedTaskCount = 0
+
+  if (tasks.length == 0) {
+    allDone()
+  }
+
+  for (var task of tasks) {
+    task(() => {
+      completedTaskCount++
+      if (completedTaskCount == tasks.length) {
+        allDone()
+      }
+    })
+  }
+}
+
+
+function parallelLimit(tasks, limit = 1, allDone) {
+  var j = 0
+  var completedCount = 0
+
+  if (tasks.length == 0) {
+    allDone()
+  }
+
+  for (var i = 0; i < limit; i++) {
+    if (j < tasks.length) {
+      tasks[j++]( next )
+    }
+  }
+
+  function next() {
+    completedCount++
+
+    if (j < tasks.length) {
+      tasks[j++](next)
+    } else {
+      if (completedCount == tasks.length) {
+        allDone()
+      }
+    }
+  }
+}
+</script>
+
+
+

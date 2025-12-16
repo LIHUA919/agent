@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <script src="react.development.js"></script>
+    <script src="react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://lodash.com/vendor/cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"></script>
+
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel" data-presets="react">
+      var { useState, useCallback, useEffect, memo, useRef, useMemo, useId, useReducer, useLayoutEffect, useContext } = React
+
+      // 被React.memo包裹的组件，如果新传入的props没有发生变化
+      // 则不更新组件
+      var Button = memo(function Button(props) {
+        console.log('Button render')
+        var {children, className, ...restProps} = props
+        return <button {...restProps} className={`border p-1 rounded text-white bg-slate-500 ${className}`}>{children}</button>
+      })
+
+      var map = {
+        heart: '💕',
+        star: '⭐',
+        smile: '😊'
+      }
+      function Icon({ iconName }) {
+
+        return <i className="font-normal">{map[iconName] ?? 'error'}</i>
+      }
+
+
+      function useForceUpdate() {
+        // 状态的变化
+        // props的变化
+        // 上层Context的变化（如果当前组件用到了上层的Context的话）
+        var [x, setX] = useState(0)
+
+        return useCallback(function() {
+          setX(x => x + 1)
+        }, [])
+      }
+
+
+      // const [current, { inc, dec, set, reset }] = useCounter(100, { min: 1, max: 10 });
+
+      function useCounter(init, { min, max }) {
+        var [count, setCount] = useState(() => {
+          if (init > max) {
+            return max
+          }
+          if (init < min) {
+            return min
+          }
+          return init
+        })
+
+        var minRef = useRef()
+        minRef.current = min
+
+        var maxRef = useRef()
+        maxRef.current = max
+
+        var inc = useCallback((delta = 1) => {
+          if (typeof delta !== 'number') {
+            delta = 1
+          }
+          setCount(count => {
+            count += delta
+            if (count > maxRef.current) {
+              return maxRef.current
+            } else {
+              return count
+            }
+          })
+        }, [])
+        var dec = useCallback((delta = 1) => {
+          if (typeof delta !== 'number') {
+            delta = 1
+          }
+          setCount(count => {
+            count -= delta
+            if (count < minRef.current) {
+              return minRef.current
+            } else {
+              return count
+            }
+          })
+        }, [])
+        var set = useCallback((value) => {
+          if (typeof value !== 'number') {
+            value = 1
+          }
+          setCount(() => {
+            if (value > maxRef.current) {
+              return maxRef.current
+            } else if (value < minRef.current) {
+              return minRef.current
+            } else {
+              return value
+            }
+          })
+        }, [])
+        var reset = useCallback(() => {
+          setCount(() => {
+            if (init > max) {
+              return max
+            }
+            if (init < min) {
+              return min
+            }
+            return init
+          })
+        }, [])
+
+        return [count, { inc, dec, set, reset }]
+      }
+
+      function useSet(initElements) {
+        var [set, setSet] = useState(() => new Set(initElements))
+
+        var add = useCallback(function add(val) {
+          setSet(set => {
+            set.add(val)
+            return new Set(set)
+          })
+        }, [])
+
+        var remove = useCallback(function remove(val) {
+          setSet(set => {
+            set.remove(val)
+            return new Set(set)
+          })
+        }, [])
+
+        return [set, {add, remove}]
+      }
+
+      function useInterval(f, time) {
+        var ref = useRef()
+        ref.current = f
+
+        var idRef = useRef()
+
+        useEffect(() => {
+          if (!time) {
+            idRef.current = setInterval(() => {
+              ref.current()
+            }, time)
+          }
+
+          return () => clearInterval(idRef.current)
+        }, [time])
+
+        return () => clearInterval(idRef.current)
+      }
+
+      function useDebounceFn(f, time) {
+        var ref = useRef()
+        ref.current = f
+
+        var timeRef = useRef()
+        timeRef.current = time
+        
+        var idRef = useRef()
+
+        var ret = useCallback((...args) => {
+          clearInterval(idRef.current)
+
+          idRef.current = setTimeout(() => {
+            ref.current(...args)
+          }, timeRef.current)
+        }, [])
+
+        return ret
+      }
+
+      function useDebounceFn2(f, time) {
+        var ref = useRef()
+        ref.current = f
+
+        var timeRef = useRef()
+        timeRef.current = time
+
+        var ret = useMemo(
+          () => _.debounce((...args) => {
+            return ref.current(...args)
+          }, time)
+        , [])
+
+        return ret
+      }
+
+      // function useLodashHOF(lodashFn, f, ...args) {
+      //   var ref = useRef()
+      //   ref.current = f
+
+      //   var ret = useMemo(
+      //     () => lodashFn((...args) => {
+      //       ref.current(...args)
+      //     }, ...args)
+      //   , [])
+
+      //   return ret
+      // }
+
+      function useDebounce(value, wait) {
+        var [debouncedValue, setDebouncedValue] = useState(value)
+
+        var f = useDebounceFn2(() => {
+          setDebouncedValue(value)
+        }, wait)
+
+        useEffect(f, [value])
+
+        return debouncedValue
+      }
+
+      function TestUseDebounceValue() {
+        const [value, setValue] = useState('');
+        const debouncedValue = useDebounce(value, 500);
+
+        return (
+          <div>
+            <input
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder="Typed value"
+            />
+            <p>DebouncedValue: {debouncedValue}</p>
+          </div>
+        );
+      };
+
+      // function 转换lodash函数到use函数(lodashFn) {
+      //   return function useXxx(f, ...args) {
+      //     var ref = useRef()
+      //     ref.current = f
+
+      //     var ret = useMemo(
+      //       () => lodashFn((...args) => {
+      //         ref.current(...args)
+      //       }, ...args)
+      //     , [])
+
+      //     return ret
+      //   }
+      // }
+
+      function Test() {
+        // var time = useTime()
+        // var mouse = useMousePosition()
+        // var name = useVModel()
+
+        const [set, { add, remove }] = useSet(['Hello']);
+
+        useInterval(() => {
+          console.log(set)
+        }, 1000)
+
+        var [count, { inc, dec }] = useCounter(5, {min: 0, max: 10})
+
+        return (
+          <div>
+            <Button onClick={inc}>{count}</Button>
+
+            <Button type="button" onClick={() => add(String(Date.now()))}>
+              Add Timestamp
+            </Button>
+            { [...set] }
+          </div>
+        )
+      }
+
+      function Test2() {
+        
+        function foo() {
+
+        }
+
+        var f = useMemo(() => _.debounce(foo, 1000) , [])
+
+        var f = useDebounceFn(() => {woeifwoef}, 500)
+
+        return <div onClick={  f  }></div>
+      }
+
+
+
+      function MyApp() {
+
+
+        return (
+          <div>
+            <TestUseDebounceValue />
+            <Test />
+          </div>
+        )
+      }
+
+      const container = document.getElementById('root')
+      const root = ReactDOM.createRoot(container)
+      root.render(<MyApp />)
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div class="xcontainer p-2 mx-auto max-w-lg space-y-2">
+    <h1 class="text-xl font-bold">网盘</h1>
+    <div>
+      <div class="flex gap-2">
+        <button class="p-1 px-2 bg-slate-900 text-white rounded-md">↖</button>
+        <input class="grow border-2 border-slate-500 outline-none focus:border-slate-600 focus:ring-2 ring-slate-400 rounded-md p-1" id="current-path" type="text" value="/">
+        <button class="p-1 px-2 bg-slate-900 text-white rounded-md" id="mkdir">新建文件夹</button>
+        <label class="p-1 px-2  bg-slate-900 text-white rounded-md flex items-center">
+          上传文件
+          <input multiple type="file" class="p-2 px-4 bg-slate-900 hidden text-white rounded-md" id="upload-file" value="上传文件">
+        </label>
+      </div>
+    </div>
+    <ul class="space-y-2" id="file-list"></ul>
+
+
+  </div>
+
+  <div id="edit-view" class="flex p-4 gap-4 flex-col hidden bg-slate-300 fixed w-full h-full inset-0">
+    <textarea class=" rounded-lg font-mono p-4 outline-none focus:ring ring-cyan-300 border-2 border-cyan-400 grow" id="edit-box" cols="30" rows="10"></textarea>
+    <div class="flex justify-end gap-4">
+      <button class="p-2 px-4 bg-slate-900 text-white rounded-md " id="save">保存</button>
+      <button class="p-2 px-4 bg-slate-900 text-white rounded-md " id="cancel">取消</button>
+    </div>
+  </div>
+
+  <script>
+    var fileList = document.querySelector('#file-list')
+    var currentPath = document.querySelector('#current-path')
+    var uploadFile = document.querySelector('#upload-file')
+    var mkdir = document.querySelector('#mkdir')
+    var editView = document.querySelector('#edit-view')
+    var editBox = document.querySelector('#edit-box')
+    var saveBtn = document.querySelector('#save')
+    var cancelBtn = document.querySelector('#cancel')
+
+    var currentDirFiles = []
+
+    mkdir.addEventListener('click', async e => {
+      var dirname = prompt('请输入文件夹名称')
+      await fetch(currentPath.value + dirname, {
+        method: 'MKCOL'
+      })
+      alert('创建成功')
+      updateFileList()
+    })
+
+    uploadFile.addEventListener('change', async e => {
+      if (e.target.files.length > 0) {
+        var file = e.target.files[0]
+
+        if (currentDirFiles.includes(file.name) && confirm('当前文件已经存在，继上传将会覆盖原有文件，要继续吗？') == false) {
+          return
+        }
+
+        await fetch(currentPath.value + file.name, {
+          method: 'PUT',
+          body: file,
+        })
+
+        alert('上传成功')
+
+        updateFileList()
+      }
+    })
+
+    fileList.addEventListener('click', async e => {
+      if (e.target.matches('button.delete')) {
+        var path = currentPath.value + e.target.dataset.filename
+        console.log(path)
+        if (confirm('确定要删除吗？')) {
+          await fetch(path, {
+            method: 'DELETE'
+          })
+          alert('删除成功')
+          e.target.parentNode.remove()
+        }
+      } else if (e.target.matches('button.edit')) {
+        var filename = e.target.dataset.filename
+        if (!/\.(txt|css|js|py|html|json|log|mjs|svg|xml)$/.test(filename)) {
+          alert('只有文本文件可以在线编辑')
+          return
+        }
+        var fileContent = await fetch(currentPath.value + e.target.dataset.filename).then(it => it.text())
+        editBox.value = fileContent
+        editBox.dataset.filename = filename
+        editView.classList.remove('hidden')
+        document.body.classList.add('overflow-hidden')
+      } else if (e.target.matches('a')) {
+        var a = e.target
+
+        if (a.href.endsWith('/')) {
+          e.preventDefault()
+          currentPath.value = a.getAttribute('href')
+          updateFileList()
+        }
+      }
+    })
+
+    cancelBtn.onclick = () => {
+      editView.classList.add('hidden')
+      document.body.classList.remove('overflow-hidden')
+    }
+    saveBtn.onclick = async e => {
+      await fetch(currentPath.value + editBox.dataset.filename, {
+        method: 'PUT',
+        body: editBox.value,
+      })
+      editView.classList.add('hidden')
+      document.body.classList.remove('overflow-hidden')
+    }
+
+    currentPath.addEventListener('keyup', async e => {
+      if (e.key == 'Enter') {
+        if (!currentPath.value.endsWith('/')) {
+          currentPath.value += '/'
+        }
+        updateFileList()
+      }
+    })
+
+    window.onhashchange = () => {
+      currentPath.value = decodeURIComponent(location.hash.slice(1))
+      updateFileList()
+    }
+
+    function getFileList(path = '/') {
+      return fetch(path).then(it => it.json())
+    }
+
+    async function updateFileList() {
+      location.hash = currentPath.value
+      return getFileList(currentPath.value)
+        .then(list => {
+          currentDirFiles = list
+          showFileList(list)
+        })
+    }
+
+    function showFileList(entries) {
+      fileList.innerHTML = entries.map(entry => {
+        return `<li class="flex gap-2 items-center hover:bg-zinc-300 group">
+          <a target="_blank" href="${currentPath.value + entry.name}${entry.isDir ? '/' : ''}" class="mr-auto underline hover:text-red-500  truncate w-64 grow-0" title="${entry.name}${entry.isDir ? '/' : ''}">${entry.name}${entry.isDir ? '/' : ''}</a>
+          <span class="w-8">${entry.size}</span>
+          <a data-filename="${entry.name}" download href="${currentPath.value + entry.name}" class="opacity-0 group-hover:opacity-100 shrink-0 p-1 px-2 bg-slate-900 text-white rounded-md download">下载</a>
+          <button data-filename="${entry.name}" class="peer opacity-0 group-hover:opacity-100 shrink-0 p-1 px-2 bg-slate-900 text-white rounded-md edit">编辑</button>
+          <button data-filename="${entry.name}" class="peer-hover:bg-sky-600 opacity-0 group-hover:opacity-100 shrink-0 p-1 px-2 bg-slate-900 text-white rounded-md delete">删除</button>
+        </li>`
+      }).join('')
+    }
+
+    if (location.hash.slice(1)) {
+      currentPath.value = decodeURIComponent(location.hash.slice(1))
+    }
+    updateFileList()
+  </script>
+</body>
+</html>

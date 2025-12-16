@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <script src="react.development.js"></script>
+    <script src="react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel" data-presets="react">
+      var { useState, useCallback, useEffect, memo, useRef, useMemo, useId, useReducer, useLayoutEffect, useContext } = React
+
+      // 被React.memo包裹的组件，如果新传入的props没有发生变化
+      // 则不更新组件
+      var Button = memo(function Button(props) {
+        console.log('Button render')
+        var {children, className, ...restProps} = props
+        return <button {...restProps} className={`border p-1 rounded text-white bg-slate-500 ${className}`}>{children}</button>
+      })
+
+
+      function isEqual(obj1, obj2) {
+        for (var key in obj1) {
+          if (obj1[key] !== obj2[key]) {
+            return false
+          }
+        }
+        return true
+      }
+
+      var map = {
+        heart: '💕',
+        star: '⭐',
+        smile: '😊'
+      }
+      function Icon2({ iconName }) {
+        return <ColorContext.Consumer>
+          {color => {
+            return <DarkModeContext.Consumer>
+              {value => {
+                return <i className="font-normal">{map[iconName] ?? 'error'}</i>
+              }}
+            </DarkModeContext.Consumer>
+          }}
+        </ColorContext.Consumer>
+      }
+
+      function Test({ children }) {
+        return children()
+      }
+
+      function Icon({ iconName }) {
+        var value = useContext(DarkModeContext)
+        var color = useContext(ColorContext)
+
+        return <i className="font-normal">{map[iconName] ?? 'error'}</i>
+      }
+
+      class TestContextUsage extends React.Component {
+        static contextType = DarkModeContext
+
+        render() {
+
+          return <DarkModeContext.Consumer>
+            {value => {
+              return <i className="font-normal">{map[iconName] ?? 'error'}</i>
+            }}
+          </DarkModeContext.Consumer>
+        }
+      }
+
+      function Checkbox({ label, ...restProps }) {
+        var id = useId()
+
+        var color = useContext(ColorContext)
+        // var darkMode = useContext(DarkModeContext)
+
+        console.log(color)
+        // console.log(darkMode)
+
+        return (
+          <div>
+            <input id={'cb-' + id} type="checkbox" {...restProps} /> <label htmlFor={'cb-' + id}>{label}</label>
+          </div>
+        )
+      }
+
+      var ColorContext    = React.createContext()
+      var DarkModeContext = React.createContext()
+      var DisabledContext = React.createContext()
+      // DisabledContext.Provider
+      // DisabledContext.Consumer
+
+
+      // forwardRef返回的组件是一个专门用来转发ref的组件，所以叫forward（转发）ref
+      // 特大喜讯！react 19里面，forwardRef没有了，所有的函数组件自动拥有转发ref的能力
+      var MyInput = React.forwardRef(function MyInput(props, ref) {
+        debugger
+        var inputRef = useRef()
+        var [count, setCount] = useState(0)
+
+        React.useImperativeHandle(ref, () => {
+          return {
+            focus() {
+              inputRef.current.focus()
+            },
+            foo() {
+
+            },
+            getCount() {
+              return count
+            },
+            setFoo(v) {
+              
+            }
+          }
+        }, [])
+
+        // function useImperativeHandle(ref, factory, deps) {
+        //   useMemo(() => {
+        //     ref.current = factory()
+        //   }, deps)
+        // }
+
+        // expose.current = {
+        //   focus() {
+        //     ref.current.focus()
+        //   },
+        //   foo() {
+
+        //   },
+        //   getCount() {
+
+        //   },
+        //   setFoo(v) {
+            
+        //   }
+        // }
+
+        return <input ref={inputRef} {...props} />
+      })
+
+      var Foo = React.memo(function Foo() {
+        console.log('Foo render...')
+        return (
+          <div>
+            <Checkbox  label="保持登陆" />
+            <Checkbox  label="记住我" />
+          </div>
+        )
+      })
+
+      function MyApp() {
+        var ref = useRef()
+        console.log(ref)
+
+        var [isDark, setIsDark] = useState(false)
+
+        var obj = useRef({x:1,y:2})
+
+        function toggleDarkMode() {
+          setIsDark(!isDark)
+        }
+        function changeObj() {
+          obj.current = {
+            ...obj.current,
+            x: obj.current.x + 1,
+          }
+        }
+        
+        // ref.current.focus()
+
+        return (
+          <DarkModeContext.Provider value={isDark ? 'dark' : 'light'}>
+            <ColorContext.Provider value={obj.current}>
+              <div>
+                <button onClick={toggleDarkMode}>toggle dark mode</button>
+                <button onClick={changeObj}>change obj</button>
+                <MyInput ref={ref} />
+
+                <Foo />
+
+
+                <Icon name="smile" />
+                <Icon2 name="heart" />
+
+                <Button id="foo" title="owe" onClick={ () => console.log(1) }>
+                  hello
+                  <span>we<i>i</i>jf</span>
+                </Button>
+              </div>
+            </ColorContext.Provider>
+          </DarkModeContext.Provider>
+        )
+      }
+
+      const container = document.getElementById('root')
+      const root = ReactDOM.createRoot(container)
+      root.render(<MyApp />)
+
+    </script>
+  </body>
+</html>
