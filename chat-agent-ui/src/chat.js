@@ -14,7 +14,7 @@ const Chat = () => {
         setMessages([...messages, userMessage]);
         setInput('');
 
-        const response = await axios.post('http://localhost:5000/chat', { user_input: input });
+        const response = await axios.post('http://localhost:8080/api/chat', { userInput: input });
         const agentMessage = { text: response.data.response, sender: 'agent' };
         setMessages(prevMessages => [...prevMessages, agentMessage]);
     };

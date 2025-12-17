@@ -1,8 +1,0 @@
-getImages()
-
-getImages(id).then(img => {
-    return getJSON()
-
-})
-
-var img = getImages(id)
