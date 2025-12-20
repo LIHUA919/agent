@@ -24,7 +24,15 @@ public class Main {
     { 5, 6 },
     { 7, 8, 9 }
     };
-    
+
+    for (int[] arr : ns) {
+    for (int n : arr) {
+        System.out.print(n);
+        System.out.print(', ');
+    }
+    System.out.println();
+}
+
 
 }
 
