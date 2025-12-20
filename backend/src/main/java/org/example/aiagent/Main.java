@@ -20,10 +20,7 @@ class Person {
         return this.name;
     }
 
-    public int getAge() {
-        return this.age;
-    }
-}
+
 
 
 
