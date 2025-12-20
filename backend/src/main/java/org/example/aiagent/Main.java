@@ -25,3 +25,15 @@ class Person {
     }
 }
 
+class Person {
+    protected String name;
+    protected int age;
+}
+
+class Student extends Person {
+    public String hello() {
+        return "Hello, " + name; // OK!
+    }
+}
+
+
