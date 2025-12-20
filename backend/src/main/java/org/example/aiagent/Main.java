@@ -52,6 +52,11 @@ Person hong = new Person();
 hong.name = "Xiao Hong";
 hong.age = 15;
 
+class Person {
+    private String name;
+    private int age;
+}
+
 
 
 
