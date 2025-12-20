@@ -17,3 +17,8 @@ abstract class Person {
     public abstract void run();
     public abstract String getName();
 }
+
+interface Person {
+    void run();
+    String getName();
+}
