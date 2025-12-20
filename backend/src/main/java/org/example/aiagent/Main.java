@@ -35,11 +35,7 @@ class Student implements Person {
         System.out.println(this.name + " run");
     }
 
-    @Override
-    public String getName() {
-        return this.name;
-    }
-}
+ 
 
 
 
