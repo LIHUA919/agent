@@ -60,11 +60,6 @@ class Student extends Person {
         this.score = score;
     }
 }
-class Person {
-    public final String name;
-    public Person(String name) {
-        this.name = name;
-    }
-}
+
 
 
