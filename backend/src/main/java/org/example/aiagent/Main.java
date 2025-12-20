@@ -30,10 +30,7 @@ class Student implements Person {
         this.name = name;
     }
 
-    @Override
-    public void run() {
-        System.out.println(this.name + " run");
-    }
+  
 
  
 
