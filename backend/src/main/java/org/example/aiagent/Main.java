@@ -31,7 +31,19 @@ public class Main {
         System.out.print(', ');
     }
     System.out.println();
+    
 }
+
+    public static void mainn (String[] args) {
+        for (String arg : args) {
+            if ("-version".equals(arg)) {
+                System.out.println("v 1.0");
+                break;
+            }
+        }
+    }
+
+
 
 
 }
