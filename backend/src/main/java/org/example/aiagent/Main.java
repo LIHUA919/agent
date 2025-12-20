@@ -18,6 +18,14 @@ public class Main {
         int[] arr0 = ns[0];
         System.out.println(arr0.length); // 4
     }
+
+    int[][] ns = {
+    { 1, 2, 3, 4 },
+    { 5, 6 },
+    { 7, 8, 9 }
+    };
+    
+
 }
 
 
