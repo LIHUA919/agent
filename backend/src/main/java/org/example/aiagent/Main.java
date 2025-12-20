@@ -36,12 +36,7 @@ class Student extends Person {
     }
 }
 
-// super
-public class Main {
-    public static void main(String[] args) {
-        Student s = new Student("Xiao Ming", 12, 89);
-    }
-}
+
 
 
 
