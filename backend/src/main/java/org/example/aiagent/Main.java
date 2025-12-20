@@ -43,6 +43,9 @@ public class Main {
         }
     }
 
+Person ming = new Person();
+
+
 
 
 
