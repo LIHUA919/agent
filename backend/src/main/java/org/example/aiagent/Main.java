@@ -23,8 +23,7 @@ interface Person {
     String getName();
 }
 
-class Student implements Person {
-    private String name;
+
 
   
   
