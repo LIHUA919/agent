@@ -132,6 +132,15 @@ class Person {
     }
 }
 
+class Person {
+    private String name;
+
+    public String getName() {
+        return name; // 相当于this.name
+    }
+}
+
+
 
 }
 
