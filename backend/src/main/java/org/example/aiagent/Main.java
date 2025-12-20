@@ -18,10 +18,6 @@ abstract class Person {
     public abstract String getName();
 }
 
-interface Person {
-    void run();
-    String getName();
-}
 
 
 
