@@ -44,6 +44,14 @@ public class Main {
     }
 
 Person ming = new Person();
+ming.name = "Xiao Ming"; // 对字段name赋值
+ming.age = 12; // 对字段age赋值
+System.out.println(ming.name); // 访问字段name
+
+Person hong = new Person();
+hong.name = "Xiao Hong";
+hong.age = 15;
+
 
 
 
