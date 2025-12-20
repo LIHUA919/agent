@@ -49,12 +49,7 @@ public class Main {
     }
 }
 
-interface Person {
-    String getName();
-    default void run() {
-        System.out.println(getName() + " run");
-    }
-}
+
 
 
 
