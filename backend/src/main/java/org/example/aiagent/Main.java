@@ -68,10 +68,5 @@ class Student implements Person {
     }
 }
 
-class Person {
-    public String name;
-    public int age;
-    // 定义静态字段number:
-    public static int number;
-}
+
 
