@@ -30,11 +30,7 @@ class Person {
     protected int age;
 }
 
-class Student extends Person {
-    public String hello() {
-        return "Hello, " + name; // OK!
-    }
-}
+
 
 
 
