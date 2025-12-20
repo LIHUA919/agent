@@ -13,10 +13,7 @@ abstract class Person {
 Person s = new Student();
 Person t = new Teacher();
 
-abstract class Person {
-    public abstract void run();
-    public abstract String getName();
-}
+
 
 
 
