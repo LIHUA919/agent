@@ -29,7 +29,7 @@ static byte[] toGBK(String s) {
         // 先记下来再说:
         e.printStackTrace();
     }
-    return null;
+ 
 
 
  
