@@ -19,3 +19,17 @@ public static void main(String[] args) {
         System.out.println("Unknown error");
     }
 }
+
+
+public static void main(String[] args) {
+    try {
+        process1();
+        process2();
+        process3();
+    } catch (IOException | NumberFormatException e) {
+        // IOException或NumberFormatException
+        System.out.println("Bad input");
+    } catch (Exception e) {
+        System.out.println("Unknown error");
+    }
+}
