@@ -16,8 +16,7 @@ public class Main {
             // 如果系统不支持GBK编码，会捕获到UnsupportedEncodingException:
             System.out.println(e); // 打印异常信息
             return s.getBytes(); // 尝试使用默认编码
-        }
-   
+    
 
 
 
