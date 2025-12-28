@@ -6,6 +6,4 @@ if (code == 0) {
     switch (code) {
     case 1:
         // file not found:
-    case 2:
-        // no read permission:
-  
+ 
