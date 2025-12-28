@@ -7,6 +7,5 @@ try {
     // no read permission:
 } catch (IOException e) {
     // io error:
-} catch (Exception e) {
-    
+  s   
 
