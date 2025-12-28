@@ -29,6 +29,6 @@ public static void main(String[] args) {
     } catch (IOException | NumberFormatException e) {
         // IOException或NumberFormatException
         System.out.println("Bad input");
-    } catch (Exception e) {
+ 
     
 
