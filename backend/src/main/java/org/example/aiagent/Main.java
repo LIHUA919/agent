@@ -10,5 +10,4 @@ if (code == 0) {
         // no read permission:
     default:
         // unknown error:
-    }
-}
+
