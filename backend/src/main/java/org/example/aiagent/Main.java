@@ -16,9 +16,6 @@ public static void main(String[] args) {
     } catch (NumberFormatException e) {
         System.out.println("Bad input");
     } catch (Exception e) {
-        System.out.println("Unknown error");
-    }
-}
 
 
 
