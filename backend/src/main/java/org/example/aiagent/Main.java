@@ -29,5 +29,3 @@ public class Main {
 
     static byte[] toGBK(String s) throws UnsupportedEncodingException {
         return s.getBytes("GBK");
-    }
-}
