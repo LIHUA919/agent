@@ -31,5 +31,4 @@ public static void main(String[] args) {
         System.out.println("Bad input");
     } catch (Exception e) {
         System.out.println("Unknown error");
-    }
-}
+
