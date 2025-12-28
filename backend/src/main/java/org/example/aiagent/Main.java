@@ -6,8 +6,6 @@ void process(String file) throws IOException {
     }
 }
 
-public static void main(String[] args) {
-    try {
 
    
 
