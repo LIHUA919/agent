@@ -42,9 +42,7 @@ public static void main(String[] args) {
     } catch (UnsupportedEncodingException e) {
         System.out.println("Bad encoding");
         System.out.println("END");
-    } catch (IOException e) {
-        System.out.println("IO error");
-        System.out.println("END");
+    }
 
 
   
