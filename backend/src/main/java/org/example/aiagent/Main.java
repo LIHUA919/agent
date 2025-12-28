@@ -3,8 +3,6 @@ void process(String file) throws IOException {
         ...
     } finally {
         System.out.println("END");
-    }
-}
 
 
    
