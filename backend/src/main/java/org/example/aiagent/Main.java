@@ -28,7 +28,7 @@ public static void main(String[] args) {
         process3();
     } catch (IOException | NumberFormatException e) {
         // IOException或NumberFormatException
-        System.out.println("Bad input");
+    
  
     
 
