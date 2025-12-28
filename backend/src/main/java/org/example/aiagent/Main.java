@@ -47,12 +47,7 @@ public static void main(String[] args) {
         System.out.println("END");
     }
 }
-public static void main(String[] args) {
-    try {
-        process1();
-        process2();
-        process3();
- 
+
   
 
 
