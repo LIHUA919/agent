@@ -13,3 +13,6 @@ public class Main {
         return s.getBytes("GBK");
     }
 }
+public byte[] getBytes(String charsetName) throws UnsupportedEncodingException {
+    ...
+}
