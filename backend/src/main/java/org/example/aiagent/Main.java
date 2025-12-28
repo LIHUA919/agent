@@ -20,10 +20,7 @@ static byte[] toGBK(String s) {
     } catch (UnsupportedEncodingException e) {
         // 什么也不干
     }
-    return null;
 
-static byte[] toGBK(String s) {
-   
  
 
 
