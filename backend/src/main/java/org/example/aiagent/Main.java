@@ -31,6 +31,23 @@ public static void main(String[] args) {
         System.out.println("Bad encoding");
     } catch (IOException e) {
         System.out.println("IO error");
+
+
+        public static void main(String[] args) {
+    try {
+        process1();
+        process2();
+        process3();
+        System.out.println("END");
+    } catch (UnsupportedEncodingException e) {
+        System.out.println("Bad encoding");
+        System.out.println("END");
+    } catch (IOException e) {
+        System.out.println("IO error");
+        System.out.println("END");
+    }
+}
+
     
 
 
