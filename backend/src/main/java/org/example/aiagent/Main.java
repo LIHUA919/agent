@@ -23,10 +23,7 @@ static byte[] toGBK(String s) {
     return null;
 
 static byte[] toGBK(String s) {
-    try {
-        return s.getBytes("GBK");
-    }
-  
+   
  
 
 
