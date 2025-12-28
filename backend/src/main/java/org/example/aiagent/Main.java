@@ -38,10 +38,7 @@ public static void main(String[] args) {
         process1();
         process2();
         process3();
-        System.out.println("END");
-    } catch (UnsupportedEncodingException e) {
-        System.out.println("Bad encoding");
-        System.out.println("END");
+    
     }
 
 
