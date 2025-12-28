@@ -21,7 +21,5 @@ public byte[] getBytes(String charsetName) throws UnsupportedEncodingException {
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
-public class Main {
-    public 
-    
+
    
