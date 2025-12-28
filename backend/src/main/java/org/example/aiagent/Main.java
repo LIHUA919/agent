@@ -53,8 +53,7 @@ public static void main(String[] args) {
         process2();
         process3();
     } catch (UnsupportedEncodingException e) {
-        System.out.println("Bad encoding");
-    } 
+  
 
 
     
