@@ -17,8 +17,7 @@ public class Main {
 static byte[] toGBK(String s) {
     try {
         return s.getBytes("GBK");
-    } catch (UnsupportedEncodingException e) {
-        // 什么也不干
+    
     }
 
  
