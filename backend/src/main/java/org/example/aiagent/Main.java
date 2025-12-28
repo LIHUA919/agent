@@ -3,8 +3,6 @@ try {
     // ok:
 } catch (FileNotFoundException e) {
     // file not found:
-} catch (SecurityException e) {
-    // no read permission:
 
 
 
