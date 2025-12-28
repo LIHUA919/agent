@@ -27,5 +27,4 @@ public class Main {
         System.out.println(Arrays.toString(bs));
     }
 
-    static byte[] toGBK(String s) throws UnsupportedEncodingException {
-        return s.getBytes("GBK");
+   
