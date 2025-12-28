@@ -30,10 +30,7 @@ public static void main(String[] args) {
     } catch (UnsupportedEncodingException e) {
         System.out.println("Bad encoding");
     } catch (IOException e) {
-        System.out.println("IO error");
-
-
-        public static void main(String[] args) {
+      
    
 
 
