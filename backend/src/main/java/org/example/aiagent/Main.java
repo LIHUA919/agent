@@ -27,8 +27,7 @@ static byte[] toGBK(String s) {
         return s.getBytes("GBK");
     } catch (UnsupportedEncodingException e) {
         // 先记下来再说:
-        e.printStackTrace();
-    }
+  
  
 
 
