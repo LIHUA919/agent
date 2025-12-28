@@ -5,6 +5,6 @@ try {
     // file not found:
 } catch (SecurityException e) {
     // no read permission:
-} catch (IOException e) {
+
 
 
