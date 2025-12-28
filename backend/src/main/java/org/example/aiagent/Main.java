@@ -13,8 +13,7 @@ public class Main {
             // 用指定编码转换String为byte[]:
             return s.getBytes("GBK");
         } catch (UnsupportedEncodingException e) {
-            // 如果系统不支持GBK编码，会捕获到UnsupportedEncodingException:
-            System.out.println(e); // 打印异常信息
+
 
 
 
