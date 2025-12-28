@@ -8,6 +8,4 @@ if (code == 0) {
         // file not found:
     case 2:
         // no read permission:
-    default:
-        // unknown error:
-
+  
