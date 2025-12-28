@@ -5,10 +5,6 @@ public static void main(String[] args) {
         process3();
     } catch (IOException e) {
         System.out.println(e);
-    } catch (NumberFormatException e) {
-        System.out.println(e);
-    }
-}
 
 
 
