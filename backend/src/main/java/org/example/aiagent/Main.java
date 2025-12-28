@@ -12,8 +12,7 @@ public class Main {
     static byte[] toGBK(String s) {
         return s.getBytes("GBK");
     }
-}
-public byte[] getBytes(String charsetName) throws UnsupportedEncodingException {
+
 
 
 
