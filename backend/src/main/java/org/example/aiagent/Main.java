@@ -8,8 +8,7 @@ public class Main {
         System.out.println(Arrays.toString(bs));
     }
 
-    static byte[] toGBK(String s) throws UnsupportedEncodingException {
-        // 用指定编码转换String为byte[]:
+  
  
 
  
