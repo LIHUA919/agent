@@ -7,8 +7,7 @@ public class Main {
         try {
             byte[] bs = toGBK("中文");
             System.out.println(Arrays.toString(bs));
-        } catch (UnsupportedEncodingException e) {
-            System.out.println(e);
+      
  
 
        
