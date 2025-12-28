@@ -12,11 +12,7 @@ public static void main(String[] args) {
         process2();
         process3();
     } catch (IOException e) {
-        System.out.println("Bad input");
-    } catch (NumberFormatException e) {
-        System.out.println("Bad input");
-    } catch (Exception e) {
-
+   
 
 
     
