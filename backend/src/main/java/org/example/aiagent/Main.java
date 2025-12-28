@@ -9,9 +9,7 @@ public class Main {
             System.out.println(Arrays.toString(bs));
         } catch (UnsupportedEncodingException e) {
             System.out.println(e);
-        }
-    }
-
+ 
 
        
 
