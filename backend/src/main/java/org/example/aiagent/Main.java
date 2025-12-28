@@ -14,7 +14,7 @@ public class Main {
 
     static byte[] toGBK(String s) throws UnsupportedEncodingException {
         // 用指定编码转换String为byte[]:
-        return s.getBytes("GBK");
+       
 
 
        
