@@ -54,9 +54,7 @@ public static void main(String[] args) {
         process3();
     } catch (UnsupportedEncodingException e) {
         System.out.println("Bad encoding");
-    } catch (IOException e) {
-        System.out.println("IO error");
-  
+    } 
 
 
     
