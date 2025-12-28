@@ -30,5 +30,5 @@ public static void main(String[] args) {
         // IOException或NumberFormatException
         System.out.println("Bad input");
     } catch (Exception e) {
-        System.out.println("Unknown error");
+    
 
