@@ -1,8 +1,4 @@
-// exception
-p
- 
-        } finally {
-            System.out.println("finally");
+
         }
     }
 }
