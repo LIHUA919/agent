@@ -19,10 +19,6 @@ void process1(String s) {
     }
 }
 
-void process2(String s) {
-    if (s==null) {
-        throw new NullPointerException();
-    }
 }
 
 
