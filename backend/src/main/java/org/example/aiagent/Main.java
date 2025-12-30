@@ -16,9 +16,6 @@ public class Main {
 
 // exception
 
-        try {
-      xception e) {
-            throw new IllegalArgumentException(e);
         }
     }
 
