@@ -5,7 +5,5 @@ public class Main {
             process1();
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
+     
   
