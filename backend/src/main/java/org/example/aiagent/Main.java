@@ -105,8 +105,7 @@ public class Main {
         } catch (Exception e) {
             origin = e;
             throw e;
-        } finally {
-            Exception e = new IllegalArgumentException();
+     
             
 
 
