@@ -11,10 +11,6 @@ void process2(String s) {
     }
 }
 
-void process1(String s) {
-    try {
-        process2();
-    } catch (NullPointerException e) {
 
 
 
