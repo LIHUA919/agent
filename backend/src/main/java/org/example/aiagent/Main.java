@@ -1,6 +1,5 @@
 
 
-        String s = null;
         System.out.println(s.toLowerCase());
     }
 }
