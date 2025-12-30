@@ -1,5 +1,4 @@
 
-    String[] name = new String[2];
     Address address = new Address();
 }
 
