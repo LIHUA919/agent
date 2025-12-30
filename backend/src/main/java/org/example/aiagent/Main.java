@@ -10,8 +10,7 @@ public class Main {
         }
     }
 
-    static void process2() {
-        throw new NullPointerException();
+    
     }
 }
 
