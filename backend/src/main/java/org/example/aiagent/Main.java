@@ -13,8 +13,7 @@ public class UserNotFoundException extends BaseException {
 public class LoginFailedException extends BaseException {
 }
 
-public class BaseException extends RuntimeException {
-    public BaseException() {
+
   
 
 
