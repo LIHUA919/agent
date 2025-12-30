@@ -1,6 +1,4 @@
 
-    }
-}
 
 // 错误示例: 捕获NullPointerException
 try {
