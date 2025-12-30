@@ -3,3 +3,6 @@ static void process1(int age) {
         throw new IllegalArgumentException();
     }
 }
+
+public class BaseException extends RuntimeException {
+}
