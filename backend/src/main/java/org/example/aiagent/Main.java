@@ -2,10 +2,7 @@
 public class Main {
     public static void main(String[] args) {
 
-// exception
-
-        }
-    }
+// 
 
     static void process2() {
         throw new NullPointerException();
