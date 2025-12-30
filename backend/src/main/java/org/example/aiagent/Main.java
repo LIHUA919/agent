@@ -1,6 +1,4 @@
 
-    if (getFileSize(file) == 0) {
-        // 返回空数组而不是null:
         return new String[0];
     }
     ...
