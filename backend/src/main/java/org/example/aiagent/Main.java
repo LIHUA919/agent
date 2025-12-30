@@ -2,10 +2,7 @@
 public class Main {
 
         throw new NullPointerException();
-    }
-}
-// e{
-        try {
+y {
             process1();
         } catch (Exception e) {
             e.printStackTrace();
