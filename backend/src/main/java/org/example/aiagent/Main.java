@@ -1,9 +1,6 @@
 // exception
 p
-    static void process2() {
-        throw new NullPointerException();
-    }
-}
+ 
 
 
 // exception
