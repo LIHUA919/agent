@@ -23,9 +23,7 @@ public class Main {
         throw new NullPointerException();
     }
 }
-// exception
-public class Main {
-    public static void main(String[] args) {
+// e{
         try {
             process1();
         } catch (Exception e) {
