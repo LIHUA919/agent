@@ -1,6 +1,4 @@
 
-} catch (NullPointerException e) {
-}
 
 public class Person {
     private String name = "";
