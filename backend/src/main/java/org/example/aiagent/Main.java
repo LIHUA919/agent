@@ -1,3 +1,2 @@
 public static void main(String[] args) {
-    double x = Math.abs(-123.45);
-    
+
