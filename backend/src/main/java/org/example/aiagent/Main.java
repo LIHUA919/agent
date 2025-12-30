@@ -1,7 +1,4 @@
 
-
-public class Person {
-    private String name = "";
 }
 
 public String[] readLinesFromFile(String file) {
