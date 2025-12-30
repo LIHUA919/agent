@@ -1,6 +1,4 @@
 
-        } finally {
-            System.out.println("finally");
             throw new IllegalArgumentException();
         }
     }
