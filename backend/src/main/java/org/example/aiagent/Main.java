@@ -4,9 +4,7 @@ public class Main {
         try {
             process1();
         } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+    
 
     
             process2();
