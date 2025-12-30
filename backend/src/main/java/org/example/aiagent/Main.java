@@ -109,9 +109,7 @@ public class Main {
             Exception e = new IllegalArgumentException();
             if (origin != null) {
                 e.addSuppressed(origin);
-            }
-            throw e;
-        }
+    
 
 
 
