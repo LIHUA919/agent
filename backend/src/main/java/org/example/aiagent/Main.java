@@ -17,10 +17,7 @@ public class Main {
 // exception
 
         try {
-      
-        try {
-            process2();
-        } catch (NullPointerException e) {
+      xception e) {
             throw new IllegalArgumentException(e);
         }
     }
