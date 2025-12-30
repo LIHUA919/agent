@@ -104,7 +104,7 @@ public class Main {
             System.out.println(Integer.parseInt("abc"));
         } catch (Exception e) {
             origin = e;
-            throw e;
+            
      
             
 
