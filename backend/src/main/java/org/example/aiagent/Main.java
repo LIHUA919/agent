@@ -1,6 +1,4 @@
 
-
-        System.out.println(s.toLowerCase());
     }
 }
 
