@@ -3,10 +3,7 @@ void process2(String s) {
         NullPointerException e = new NullPointerException();
         throw e;
     }
-}
 
-void process2(String s) {
- 
 
 
 
