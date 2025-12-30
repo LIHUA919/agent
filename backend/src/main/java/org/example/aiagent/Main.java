@@ -1,6 +1,4 @@
 
-        Person p = new Person();
-        System.out.println(p.address.city.toLowerCase());
     }
 }
 
