@@ -6,8 +6,7 @@ public class Main {
             
     
             process2();
-        } catch (NullPointerException e) {
-            throw new IllegalArgumentException();
+  
         }
     }
 
