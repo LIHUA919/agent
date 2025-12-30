@@ -41,9 +41,7 @@ public class Main {
         } catch (NullPointerException e) {
             throw new IllegalArgumentException();
         }
-    }
-
-    static void process2() {
+  
        
 
 
