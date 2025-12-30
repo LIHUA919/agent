@@ -1,5 +1,4 @@
 
-    Address address = new Address();
 }
 
 class Address {
