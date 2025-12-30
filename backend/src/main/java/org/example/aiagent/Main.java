@@ -1,10 +1,6 @@
 // exception
 public class Main {
-    public static void main(String[] args) {
 
-// 
-
-    static void process2() {
         throw new NullPointerException();
     }
 }
