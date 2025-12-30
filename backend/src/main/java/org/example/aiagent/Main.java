@@ -17,11 +17,7 @@ public class Main {
 // exception
 
         try {
-        
-        }
-    }
-
-    static void process1() {
+      
         try {
             process2();
         } catch (NullPointerException e) {
