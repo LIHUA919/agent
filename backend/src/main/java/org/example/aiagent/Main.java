@@ -14,6 +14,4 @@ public class Main {
 
     static void process2() {
         Integer.parseInt(null); // 会抛出NumberFormatException
-    }
-}
 
