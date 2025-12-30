@@ -1,7 +1,4 @@
 
-        }
-    }
-}
 
 // exception
 public class Main {
