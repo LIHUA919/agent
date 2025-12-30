@@ -6,7 +6,7 @@ void process2(String s) {
 }
 
 void process2(String s) {
-    if (s==null) {
+ 
 
 
 
