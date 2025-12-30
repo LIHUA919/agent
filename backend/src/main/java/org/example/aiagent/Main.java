@@ -3,9 +3,6 @@ public class Main {
 
 
  
-    static void process1() {
-        try {
-            process2();
         } catch (NullPointerException e) {
             throw new IllegalArgumentException(e);
         }
