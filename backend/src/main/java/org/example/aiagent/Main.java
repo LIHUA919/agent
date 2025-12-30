@@ -1,8 +1,7 @@
 // exception
 public class Main {
 
-        throw new NullPointerException();
-y {
+
             process1();
         } catch (Exception e) {
             e.printStackTrace();
