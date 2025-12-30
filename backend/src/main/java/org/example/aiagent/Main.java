@@ -7,8 +7,6 @@ static void process1(int age) {
 public class BaseException extends RuntimeException {
 }
 
-public class UserNotFoundException extends BaseException {
-}
 
 
 
