@@ -12,6 +12,3 @@ public class Main {
         process2();
     }
 
-    static void process2() {
-        Integer.parseInt(null); // 会抛出NumberFormatException
-
