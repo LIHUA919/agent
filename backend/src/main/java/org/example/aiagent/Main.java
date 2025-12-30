@@ -1,8 +1,5 @@
 // exception
-public class Main {
-
-
-
+p
     static void process2() {
         throw new NullPointerException();
     }
