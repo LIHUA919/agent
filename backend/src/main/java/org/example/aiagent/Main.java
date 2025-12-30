@@ -18,7 +18,7 @@ public class BaseException extends RuntimeException {
         super();
     }
 
-    public BaseException(String message, Throwable cause) {
+
 
   
     
