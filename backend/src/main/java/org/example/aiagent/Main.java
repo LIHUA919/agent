@@ -8,7 +8,4 @@ public class Main {
         }
     }
 
-    static void process1() {
-        process2();
-    }
-
+  
