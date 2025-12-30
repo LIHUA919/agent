@@ -5,9 +5,7 @@ public class Main {
      
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
+ 
     static void process1() {
         try {
             process2();
