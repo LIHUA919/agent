@@ -1,7 +1,4 @@
 
-        return new String[0];
-    }
-    ...
 }
 
 public class Main {
