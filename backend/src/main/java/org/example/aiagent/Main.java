@@ -1,5 +1,4 @@
 
-    String city;
     String street;
     String zipcode;
 }
