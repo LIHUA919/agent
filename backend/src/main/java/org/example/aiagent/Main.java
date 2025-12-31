@@ -1,6 +1,4 @@
 
-    }
-    input.close(); // 关闭流
 }
 
 public void readFile() throws IOException {
