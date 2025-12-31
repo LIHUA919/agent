@@ -1,7 +1,7 @@
 
 
    、
-        while ((n = input.read()) != -1) { // 利用while同时读取并判断
+        whi
             System.out.println(n);
         }
     } finally {
