@@ -1,5 +1,4 @@
 
-}
 
 public void readFile() throws IOException {
     InputStream input = null;
