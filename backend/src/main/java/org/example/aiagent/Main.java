@@ -19,5 +19,4 @@ public class HistoryServlet extends HttpServlet {
 public class BookService {
     private DataSource dataSource;
 
-    public BookService(DataSource dataSource) {
-        this.dataSource = dataSource;
+    public
