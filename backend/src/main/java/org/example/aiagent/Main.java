@@ -1,7 +1,7 @@
 
 
 
-    InputStream input = null;
+
     try {
         input = new FileInputStream("src/readme.txt");
         int n;
