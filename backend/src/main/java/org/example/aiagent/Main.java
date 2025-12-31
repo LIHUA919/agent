@@ -3,7 +3,7 @@
       
  
 
-        File f2 = new File("C:\\Windows\\notepad.exe");
+       
         File f3 = new File("C:\\Windows\\nothing");
         System.out.println(f1.isFile());
         System.out.println(f1.isDirectory());
