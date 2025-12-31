@@ -14,7 +14,5 @@ public class UserService {
     private HikariConfig config = new HikariConfig();
     private DataSource dataSource = new HikariDataSource(config);
 
-    public User getUser(long userId) {
-        
 
 
