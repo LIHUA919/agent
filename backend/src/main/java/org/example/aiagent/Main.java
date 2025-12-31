@@ -1,6 +1,6 @@
 
 
-        System.out.println(f3.isDirectory());
+
     }
 }
 import java.io.*;
