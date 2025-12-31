@@ -27,7 +27,7 @@ public class CartServlet extends HttpServlet {
     private UserService userService = new UserService();
 
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        long currentUserId = getFromCookie(req);
+        long currentUserId = getFrom
     
         
 
