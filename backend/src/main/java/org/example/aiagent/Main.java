@@ -28,7 +28,6 @@ public class CartServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         long currentUserId = getFromCookie(req);
-        User currentUser = userService.getUser(currentUserId);
-        Book book = bookService.getBook(req.getParameter("bookId"));
+    
         
 
