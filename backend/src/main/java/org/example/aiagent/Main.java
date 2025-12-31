@@ -1,6 +1,5 @@
 
-import java.io.*;
-
+ss
     public static void main(String[] args) {
         File f = new File("C:\\Windows\\notepad.exe");
         System.out.println(f);
