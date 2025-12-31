@@ -1,5 +1,5 @@
 
-    // 创建一个FileInputStream对象:
+
     InputStream input = new FileInputStream("src/readme.txt");
     for (;;) {
         int n = input.read(); // 反复调用read()方法，直到返回-1
