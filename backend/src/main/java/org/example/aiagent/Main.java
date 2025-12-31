@@ -7,3 +7,5 @@ public class Main {
         System.out.println(f);
     }
 }
+
+File f = new File("C:\\Windows\\notepad.exe");
