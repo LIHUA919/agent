@@ -1,7 +1,4 @@
 
-            System.out.println(s);
-        }
-    }
 
     public static String readAsString(InputStream input) throws IOException {
         int n;
