@@ -21,5 +21,3 @@ public class BookService {
 
     public BookService(DataSource dataSource) {
         this.dataSource = dataSource;
-    }
-}
