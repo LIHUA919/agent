@@ -17,8 +17,7 @@ public class UserService {
     public User getUser(long userId) {
         try (Connection conn = dataSource.getConnection()) {
             ...
-            return user;
-        }
+      
 
 
 
