@@ -1,7 +1,4 @@
 
-
-   、
-        whi
             System.out.println(n);
         }
     } finally {
