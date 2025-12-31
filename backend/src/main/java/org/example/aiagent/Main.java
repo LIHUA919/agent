@@ -1,6 +1,4 @@
 
-
-
 public class Main {
     public static void main(String[] args) throws IOException {
         byte[] data = { 72, 101, 108, 108, 111, 33 };
