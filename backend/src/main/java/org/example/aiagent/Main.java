@@ -1,5 +1,4 @@
 
-    public static void main(String[] args) throws IOException {
         String s;
         try (InputStream input = new FileInputStream("C:\\test\\README.txt")) {
             s = readAsString(input);
