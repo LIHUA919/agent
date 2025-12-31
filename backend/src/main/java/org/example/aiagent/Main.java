@@ -1,8 +1,5 @@
 
 
-      
-());
-        System.out.println(f3.isFile());
         System.out.println(f3.isDirectory());
     }
 }
