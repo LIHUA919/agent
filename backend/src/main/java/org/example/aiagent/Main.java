@@ -3,8 +3,6 @@
       
  
 
-
-in(String[] args) throws IOException {
         File f1 = new File("C:\\Windows");
         File f2 = new File("C:\\Windows\\notepad.exe");
         File f3 = new File("C:\\Windows\\nothing");
