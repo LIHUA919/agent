@@ -1,9 +1,7 @@
 
 
       
-
-        System.out.println(f2.isFile());
-        System.out.println(f2.isDirectory());
+());
         System.out.println(f3.isFile());
         System.out.println(f3.isDirectory());
     }
