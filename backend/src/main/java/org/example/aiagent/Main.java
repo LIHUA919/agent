@@ -32,5 +32,4 @@ public class CartServlet extends HttpServlet {
         Book book = bookService.getBook(req.getParameter("bookId"));
         cartService.addToCart(currentUser, book);
         ...
-    }
-}
+
