@@ -1,6 +1,4 @@
 
-                return name.endsWith(".exe"); // 返回true表示接受该文件
-            }
         });
         printFiles(fs2);
     }
