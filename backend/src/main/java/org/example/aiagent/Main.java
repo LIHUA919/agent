@@ -1,5 +1,4 @@
 
-        if (input != null) { input.close(); }
     }
 }
 
