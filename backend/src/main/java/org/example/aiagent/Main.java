@@ -6,8 +6,6 @@ public class Main {
         File[] fs1 = f.listFiles(); // 列出所有文件和子目录
         printFiles(fs1);
         File[] fs2 = f.listFiles(new FilenameFilter() { // 仅列出.exe文件
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".exe"); // 返回true表示接受该文件
 
 
 
