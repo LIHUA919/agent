@@ -14,7 +14,5 @@ public class CartServlet extends HttpServlet {
 public class HistoryServlet extends HttpServlet {
     private BookService bookService = new BookService();
     private UserService userService = new UserService();
-}
-
-public class BookService {
+lass BookService {
     p
