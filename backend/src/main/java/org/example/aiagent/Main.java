@@ -1,7 +1,5 @@
 
 
-
-
         input = new FileInputStream("src/readme.txt");
         int n;
         while ((n = input.read()) != -1) { // 利用while同时读取并判断
