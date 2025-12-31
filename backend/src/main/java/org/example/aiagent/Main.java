@@ -1,5 +1,4 @@
 
-        printFiles(fs1);
         File[] fs2 = f.listFiles(new FilenameFilter() { // 仅列出.exe文件
             public boolean accept(File dir, String name) {
                 return name.endsWith(".exe"); // 返回true表示接受该文件
