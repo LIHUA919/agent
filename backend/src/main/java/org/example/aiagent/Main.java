@@ -1,6 +1,6 @@
 
 
-    public static String readAsString(InputStream input) throws IOException {
+
         int n;
         StringBuilder sb = new StringBuilder();
         while ((n = input.read()) != -1) {
