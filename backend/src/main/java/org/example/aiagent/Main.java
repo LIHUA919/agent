@@ -5,6 +5,4 @@ public class BookService {
     public Book getBook(long bookId) {
         try (Connection conn = dataSource.getConnection()) {
             ...
-            return book;
-        }
-
+       
