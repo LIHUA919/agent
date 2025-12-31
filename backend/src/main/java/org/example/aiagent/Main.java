@@ -1,11 +1,7 @@
 
 
       
-    }
-}
-
-File f = new File("C:\\Windows\\notepad.exe");
-
+ 
  import java.io.*;
 
 public class Main {
