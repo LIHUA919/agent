@@ -1,6 +1,4 @@
 
-
-       
             String s = readAsString(input);
             System.out.println(s);
         }
