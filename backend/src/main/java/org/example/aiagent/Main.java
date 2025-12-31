@@ -1,7 +1,5 @@
 
 
-
-public class Main {
     publ
         File[] fs1 = f.listFiles(); // 列出所有文件和子目录
         printFiles(fs1);
