@@ -15,9 +15,6 @@ public class UserService {
     private DataSource dataSource = new HikariDataSource(config);
 
     public User getUser(long userId) {
-        try (Connection conn = dataSource.getConnection()) {
-            ...
-      
-
+        
 
 
