@@ -1,7 +1,4 @@
 
-        });
-        printFiles(fs2);
-    }
 
     static void printFiles(File[] files) {
         System.out.println("==========");
