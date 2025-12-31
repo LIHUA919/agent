@@ -9,11 +9,7 @@ public class Main {
             public boolean accept(File dir, String name) {
                 return name.endsWith(".exe"); // 返回true表示接受该文件
             }
-        });
-        printFiles(fs2);
-    }
 
-    static void printFiles(File[] files) {
 
 
 
