@@ -1,6 +1,4 @@
 
-        }
-        System.out.println(n); // 打印byte的值
     }
     input.close(); // 关闭流
 }
