@@ -3,6 +3,5 @@ public class BookService {
     private DataSource dataSource = new HikariDataSource(config);
 
     public Book getBook(long bookId) {
-        try (Connection conn = dataSource.getConnection()) {
-            ...
+        
        
