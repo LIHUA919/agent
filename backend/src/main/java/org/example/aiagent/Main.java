@@ -1,6 +1,6 @@
 
 
-public void readFile() throws IOException {
+
     InputStream input = null;
     try {
         input = new FileInputStream("src/readme.txt");
