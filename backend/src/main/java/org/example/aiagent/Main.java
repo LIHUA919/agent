@@ -1,7 +1,6 @@
 
 
 
-        int n = input.read(); // 反复调用read()方法，直到返回-1
         if (n == -1) {
             break;
         }
