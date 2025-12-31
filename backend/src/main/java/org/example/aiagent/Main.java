@@ -1,5 +1,4 @@
 
-            System.out.println(n);
         }
     } finally {
         if (input != null) { input.close(); }
