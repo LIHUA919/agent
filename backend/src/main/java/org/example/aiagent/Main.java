@@ -1,4 +1,4 @@
-public void readFile() throws IOException {
+
     // 创建一个FileInputStream对象:
     InputStream input = new FileInputStream("src/readme.txt");
     for (;;) {
