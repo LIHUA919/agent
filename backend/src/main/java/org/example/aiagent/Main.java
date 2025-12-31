@@ -9,7 +9,3 @@ public class CartServlet extends HttpServlet {
         cartService.addToCart(currentUser, book);
         ...
     }
-}
-
-public class HistoryServlet extends HttpServlet {
- 
