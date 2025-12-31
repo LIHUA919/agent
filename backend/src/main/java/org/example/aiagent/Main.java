@@ -4,7 +4,6 @@
  
 
 
-        System.out.println(f.getCanonicalPath());
     }
 }
 
