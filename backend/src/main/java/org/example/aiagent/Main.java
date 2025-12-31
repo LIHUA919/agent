@@ -4,8 +4,6 @@
  
 
 
-        System.out.println(f.getPath());
-        System.out.println(f.getAbsolutePath());
         System.out.println(f.getCanonicalPath());
     }
 }
