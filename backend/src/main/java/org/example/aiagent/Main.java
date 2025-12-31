@@ -2,9 +2,6 @@
 
       
 
-        File f3 = new File("C:\\Windows\\nothing");
-        System.out.println(f1.isFile());
-        System.out.println(f1.isDirectory());
         System.out.println(f2.isFile());
         System.out.println(f2.isDirectory());
         System.out.println(f3.isFile());
