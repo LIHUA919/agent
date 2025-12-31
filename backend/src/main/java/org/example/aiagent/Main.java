@@ -1,7 +1,4 @@
 
-
-
-        if (n == -1) {
             break;
         }
         System.out.println(n); // 打印byte的值
